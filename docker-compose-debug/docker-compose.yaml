@@ -1,0 +1,59 @@
+version: "3.9"
+services:
+  server:
+    image: chewker-server
+    build: ../Server
+    # ports:
+    # - "9090:9090"
+    volumes:
+    - ./data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s    
+  client:
+    image: chewker-client
+    build: ../vite_project
+    # ports:
+    # - "3000:80"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 500M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s    
+  envoy:
+    image: envoyproxy/envoy:v1.27.0
+    environment:
+      - ENVOY_UID=0
+    volumes:
+      - ./data/envoy/envoy.yaml:/etc/envoy/envoy.yaml
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/lib/letsencrypt
+    ports:      
+      - "8080:80"
+      - "443:443"
+      - "9901:9901"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 2G
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+   
+
+      

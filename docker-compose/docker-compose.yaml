@@ -1,0 +1,77 @@
+version: "3.9"
+services:
+  server:
+    image: chewker-server
+    build: ../Server
+    # ports:
+    # - "9090:9090"
+    volumes:
+    - ./data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+      restart_policy:
+        condition: any
+        delay: 10s
+        #max_attempts: 3
+        window: 60s    
+  client:
+    image: chewker-client
+    build: ../vite_project
+    # ports:
+    # - "3000:80"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 500M
+      restart_policy:
+        condition: any
+        delay: 5s
+        #max_attempts: 3
+        window: 60s    
+  envoy:
+    image: envoyproxy/envoy:v1.27.0
+    environment:
+     - ENVOY_UID=0
+    volumes:
+      - ./data/envoy/envoy.yaml:/etc/envoy/envoy.yaml
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/lib/letsencrypt
+    ports:      
+      - "8080:80"
+      - "443:443"
+      - "9901:9901"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 2G
+      restart_policy:
+        condition: any
+        delay: 5s
+        #max_attempts: 3
+        window: 60s
+  certbot:
+    image: certbot/certbot:v2.7.3    
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"     
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/lib/letsencrypt 
+      - ./data/certbot/logs:/var/log/letsencrypt
+    ports:
+      - "80:80"     
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 500M
+      restart_policy:
+        condition: any
+        delay: 5s
+        #max_attempts: 3
+        window: 60s         
+
+      

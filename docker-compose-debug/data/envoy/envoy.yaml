@@ -1,0 +1,118 @@
+admin:
+  address:
+    socket_address: { address: 0.0.0.0, port_value: 9901 }
+
+static_resources:
+  secrets:
+    - name: server_cert
+      tls_certificate:
+        certificate_chain:
+          filename: /etc/letsencrypt/live/chewker.com/fullchain.pem
+        private_key:
+          filename: /etc/letsencrypt/live/chewker.com/privkey.pem
+  listeners:
+  - name: listener_http
+    address:
+      socket_address: { address: 0.0.0.0, port_value: 80 }
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: certbot_http
+          codec_type: AUTO
+          use_remote_address: true
+          upgrade_configs:
+          - upgrade_type: websocket
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: local_service
+              domains: ["*"]
+              routes:
+              # - match: { prefix: "/.well-known/acme-challenge/" }
+              #   route: { cluster: certbot }                
+              - match: { prefix: "/" }
+                route: { cluster: certbot }
+          http_filters:
+          - name: envoy.filters.http.router
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router     
+  - name: listener_https
+    address:
+      socket_address: { address: 0.0.0.0, port_value: 443 }
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: ingress_https
+          codec_type: AUTO
+          use_remote_address: true
+          upgrade_configs:
+          - upgrade_type: websocket
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: local_service
+              domains: ["localhost", "chewker.com", "www.chewker.com"]
+              routes:
+              - match: { prefix: "/api/" }
+                route: { prefix_rewrite: "/", cluster: chewker-server }                
+              - match: { prefix: "/" }
+                route: { cluster: chewker-client }
+          http_filters:
+          - name: envoy.filters.http.router
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router      
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+          common_tls_context:              
+            tls_certificate_sds_secret_configs:
+            - name: server_cert
+            # - certificate_chain:
+            #     filename: "/etc/letsencrypt/live/chewker.com/fullchain.pem"
+            #   private_key:
+            #     filename: "/etc/letsencrypt/live/chewker.com/privkey.pem"
+  clusters:
+  - name: chewker-server
+    connect_timeout: 0.25s
+    type: STRICT_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: chewker-server
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: server
+                port_value: 9090
+  - name: chewker-client
+    connect_timeout: 0.25s
+    type: STRICT_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: chewker-client
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: client
+                port_value: 80     
+  - name: certbot
+    connect_timeout: 0.25s
+    type: STRICT_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: certbot
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: certbot
+                port_value: 80                            

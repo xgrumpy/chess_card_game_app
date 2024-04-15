@@ -1,0 +1,7 @@
+**/bin
+**/obj
+
+**/nodemodule
+**/dist
+.fake
+**/docker-compose/data/certbot/logs
