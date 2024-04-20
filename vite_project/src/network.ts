@@ -99,7 +99,7 @@ export async function subscribe(dispatch: DispatchF, session: string, token: str
       let defending_card = game.defending_card
 
       dispatch({ type: 'subscribe', position, turn: game.turn, hand, white_can_castle, black_can_castle, result, ep_square, defending_card })
-      console.log(obj)
+      // console.log(obj)
       // Call subscribe() again to get the next message
       await new Promise(resolve => setTimeout(resolve, pollingDelay))
       if (cancellation.valid)

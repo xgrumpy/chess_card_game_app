@@ -77,29 +77,24 @@ type CardChooserProps = {
   
   export function CardChooser(props: CardChooserProps) {
     let disabledBg = 'gray'//'#DDBBBB55'
-  
     const ww = 80
     const hh = ww * (1.42)
-  
     const arr = props.symbols.map((s) => {
       let image = cardImageFromSymbol(s) ?? ""
       let isDisabled = props.disabled(s)
-  
       let bg = isDisabled ? disabledBg : cardBackgroundColor //'#93c572' // '#C1E1C1'
       let p: React.CSSProperties = { width: ww, height: hh, backgroundColor: bg }
-      if (props.selected == s && !isDisabled) {
+      if (props.selected == s) {
         p['borderColor'] = 'white'
         p['borderWidth'] = 3
       }
-  
       let q: React.CSSProperties = isDisabled ? { filter: 'brightness(30%)' } : {}
-  
       return (
         <Col>
           <Card
             hoverable
             style={p}
-            cover={<img alt="" src={image} style={q} onClick={() => { if (!isDisabled) props.onSelectionChanged(s) }} />}
+            cover={<img alt="" src={image} style={q} onClick={() => { props.onSelectionChanged(s) }} />}
           >
           </Card>
         </Col>)
@@ -109,7 +104,6 @@ type CardChooserProps = {
       <div className="container">
         <Row gutter={6}>
           {...arr}
-  
         </Row>
       </div>
     )

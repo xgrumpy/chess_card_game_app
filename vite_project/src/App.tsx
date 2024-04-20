@@ -371,8 +371,6 @@ export const VecBoard = ({ state, dispatch }: VecBoardProps) => {
   </svg>
 }
 
-
-
 function reducer(state: State, action: any): State {
   switch (action.type) {
     case 'active_users':
@@ -521,176 +519,6 @@ function reducer(state: State, action: any): State {
   return state
 }
 
-/*
-function InitialPage({ state, dispatch }: VecBoardProps) {
-  let [token, setToken] = useState('')
-  let [createTrigger, setCreateTrigger] = useState(0)
-  //let [mountCounter, setMountCounter] = useState(0)
-
-
-  let [whiteToken, setWhiteToken] = useState('')
-  let [blackToken, setBlackToken] = useState('')
-
-  const [api, contextHolder] = notification.useNotification({ maxCount: 2 });
-
-  const close = () => {
-    console.log(
-      'Notification was closed. Either the close button was clicked or duration time elapsed.',
-    )
-  }
-
-  const openSuccessNotification = () => {
-    const key = `open${Date.now()}`;
-    const btn = (
-      <Space>
-        <Button type="link" size="small" onClick={() => api.destroy()}>
-          Close all notifications
-        </Button>
-        <Button type="primary" size="small" onClick={() => api.destroy(key)}>
-          Close
-        </Button>
-      </Space>
-    )
-
-    let wt = whiteToken
-    let bt = blackToken
-
-    setWhiteToken('')
-    setBlackToken('')
-
-    api.success({
-      placement: 'bottom',
-      duration: 0, // never expires
-      message: `Created new game`,
-      description:
-        `Created new game at ${new Date().toLocaleTimeString('en-us')}. Please share tokens with your opponent. White token: ${wt}. Black token: ${bt}`,
-      btn,
-      key,
-      onClose: close,
-    });
-  }
-
-  const openFailuerNotification = () => {
-    const key = `open${Date.now()}`;
-    const btn = (
-      <Space>
-        <Button type="link" size="small" onClick={() => api.destroy()}>
-          Close all notifications
-        </Button>
-        <Button type="primary" size="small" onClick={() => api.destroy(key)}>
-          Close
-        </Button>
-      </Space>
-    )
-
-    let wt = whiteToken
-    let bt = blackToken
-
-
-    api.error({
-      placement: 'bottom',
-      duration: 5000, // never expires
-      message: `Unable to create a game`,
-      description:
-        `Failed to create a game at ${new Date().toLocaleTimeString('en-us')}. Tokens '${wt}' or '${bt}' are likely taken`,
-      btn,
-      key,
-      onClose: close,
-    });
-  }
-
-  let session = state.userInfo?.session
-
-  if (session == undefined)
-    return (<h1>No Session</h1>)
-
-  let navigate = useNavigate()
-
-  const mutation = useMutation({
-    mutationFn: async (token: string) => {
-      const response = await fetch(`${httpScheme}://${host}/subscribe/${session}/${token}`)
-      if (!response.ok) {
-        throw new Error('Network response was not ok')
-      }
-      let json = await response.json()
-      if (json != null) {
-        let isWhite = json.user_is_white as boolean
-        let opponent = isWhite ? json.game.pairing.black : json.game.pairing.white
-        dispatch({ type: 'login', user_is_white: isWhite, token, opponent })
-        navigate("/main")
-      }
-
-      return json
-    },
-  })
-
-
-  useEffect(() => {
-    if (createTrigger > 0 && whiteToken.length > 0 && blackToken.length > 0) {
-      createGame(dispatch, whiteToken, blackToken, 1, openSuccessNotification, openFailuerNotification)
-      //openSuccessNotification()
-    }
-  }, [createTrigger])
-
-
-  useEffect(() => {
-    console.log('Mounting initial page')
-    // connection.on("ActiveUsers", (arr:string[]) => {
-    //   // dispatch...
-    //   console.log("active usrs", arr)
-    // })
-    return () => {
-      // Anything in here is fired on component unmount.
-      console.log('Unmounting initial page')
-      //connection.off("ActiveUsers")
-    }
-  }, [])
-
-  let userDescr = `Welcome "${state.userInfo?.uid}"!`
-  return (
-    <>
-      <br />
-      <div className='container'>
-        <Typography.Text>{userDescr}</Typography.Text>
-      </div>
-      <br />
-      {contextHolder}
-      <Divider orientation="center">Go to game</Divider>
-      <div className='container'>
-        <Form style={{ maxWidth: 500 }}>
-          <Form.Item label="Token">
-            <Input placeholder="enter token" value={token} onChange={(e) => { setToken(e.target.value) }} />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" onClick={() => {
-              // dispatch({ type: 'change_page', page: 'main', token })
-              //setLoginTrigger(loginTrigger + 1)
-              mutation.mutate(token)
-            }}>Go</Button>
-          </Form.Item>
-        </Form>
-      </div>
-      <Divider orientation="center">New game</Divider>
-      <div className='container'>
-        <Form style={{ maxWidth: 500 }}>
-          <Form.Item label="White">
-            <Input placeholder="enter token" value={whiteToken} onChange={(e) => { setWhiteToken(e.target.value) }} />
-          </Form.Item>
-          <Form.Item label="Black">
-            <Input placeholder="enter token" value={blackToken} onChange={(e) => { setBlackToken(e.target.value) }} />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" onClick={() => {
-              setCreateTrigger(createTrigger + 1)
-            }}> Create</Button>
-          </Form.Item>
-        </Form>
-      </div>
-    </>)
-}
-
-*/
-
 function counterSuitF(s: string) {
   switch (s) {
     case "♠": return "♣"
@@ -810,10 +638,6 @@ function suitForLogicalSq(sq: [number, number]) {
   // else (!rowEven && !colEven) 
   return '♣'
 }
-
-
-
-
 
 function makeMove(state: State, dispatch: React.Dispatch<any>) {
   if (state.userInfo === null)
@@ -1076,16 +900,7 @@ function MainPage({ state, dispatch }: VecBoardProps) {
 
   }, [state.swapReqCount])
 
-
-  
-
-
   const style: React.CSSProperties = { margin: 'auto', display: 'block' }
-
-  // let checkmateStr = () => {
-  //   let cm = isInCheckMate(findKing(state.position, state.login!.user_is_white)!, state.position)
-  //   return `in checkmate: ${cm}`
-  // }
 
   const isWhite = state.login.user_is_white
   const login = state.login

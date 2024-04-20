@@ -147,6 +147,13 @@ export function SignupForm({ state, dispatch }: VecBoardProps) {
 
 }
 
+function setCookie(name: string, value: string, minutes: number) {
+  const expiryDate = new Date();
+  expiryDate.setTime(expiryDate.getTime() + (minutes * 60 * 1000));
+  const expires = "expires=" + expiryDate.toUTCString();
+  document.cookie = name + "=" + value + ";" + expires + ";path=/";
+}
+
 export function Signin(props: VecBoardProps) {
   let { dispatch } = props
 
@@ -172,7 +179,10 @@ export function Signin(props: VecBoardProps) {
       let obj = await response.json()
       let session = obj.session
 
-      //console.log("signin obj", obj)
+      // localStorage.setItem('payload', JSON.stringify(payload));
+      // Function to set a cookie with expiration time
+      // Set a cookie to expire after 30 minutes
+      setCookie('payload', JSON.stringify(payload), 60);
 
       if (!_.isUndefined(session)) {
         await discardConnectionR()
@@ -190,7 +200,7 @@ export function Signin(props: VecBoardProps) {
           let isWhite = obj.game_state.user_is_white as boolean
           let pairing = obj.game_state.game.pairing
           let opponent = isWhite ? pairing.black[1] : pairing.white[1]
-          dispatch({ type: 'login', user_is_white: obj.game_state.user_is_white, token:payload.uid, opponent:opponent })
+          dispatch({ type: 'login', user_is_white: obj.game_state.user_is_white, token: payload.uid, opponent: opponent })
           navigate("/main")
         }
       }
@@ -207,22 +217,69 @@ export function Signin(props: VecBoardProps) {
     console.log('Failed:', errorInfo);
   }
 
-
-  // if (mutation.isSuccess) {
-  //   // let s = JSON.stringify(mutation.data)
-  //   // console.log("mutation result: ", s)
-  //   // navigate("/old")
-  // }
-
   useEffect(() => {
-    console.log('Mounting signin page')
-    // go back to index if we do not have 
-    discardConnectionR()
+    const getCookie = (name: string): string | undefined => {
+      const cookieValue = document.cookie
+        .split('; ')
+        .find(row => row.startsWith(name + '='));
 
-    return () => {
-      // Anything in here is fired on component unmount.
-      console.log('Unmounting signin page')
+      if (cookieValue) {
+        return cookieValue.split('=')[1];
+      }
+      return undefined;
+    };
+
+    // Get the value of a cookie named 'cookieName'
+    const data = getCookie('payload');
+    // console.log(cookieValue);
+
+    // const data = localStorage.getItem('payload');
+
+    type FieldType = {
+      uid?: string
+      password?: string
+      remember?: string
     }
+    const autoSignIn = async (payload: FieldType) => {
+      const response = await fetch(`${httpScheme}://${host}/signin`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      })
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok')
+      }
+
+      let obj = await response.json()
+      let session = obj.session
+      setCookie('payload', JSON.stringify(payload), 60);
+      if (!_.isUndefined(session)) {
+        await discardConnectionR()
+        await createConnectionR()
+        if (!connectionR)
+          throw new Error('SignalR connection failed to establish')
+
+        await connectionR.invoke("Login", session)
+        console.log('SignalR authenticated')
+        dispatch({ type: 'register_user', uid: payload.uid, session })
+
+        if (obj.game_state == undefined) {
+          navigate("/lobby")
+        } else {
+          let isWhite = obj.game_state.user_is_white as boolean
+          let pairing = obj.game_state.game.pairing
+          let opponent = isWhite ? pairing.black[1] : pairing.white[1]
+          dispatch({ type: 'login', user_is_white: obj.game_state.user_is_white, token: payload.uid, opponent: opponent })
+          navigate("/main")
+        }
+      }
+      return obj
+    }
+    if (data !== undefined) {
+      const payload = JSON.parse(data);
+      autoSignIn(payload);
+    }
+
   }, [])
 
   return (
