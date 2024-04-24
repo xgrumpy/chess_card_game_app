@@ -182,6 +182,7 @@ export function Signin(props: VecBoardProps) {
       // localStorage.setItem('payload', JSON.stringify(payload));
       // Function to set a cookie with expiration time
       // Set a cookie to expire after 30 minutes
+      
       setCookie('payload', JSON.stringify(payload), 60);
 
       if (!_.isUndefined(session)) {
@@ -252,6 +253,7 @@ export function Signin(props: VecBoardProps) {
 
       let obj = await response.json()
       let session = obj.session
+      
       setCookie('payload', JSON.stringify(payload), 60);
       if (!_.isUndefined(session)) {
         await discardConnectionR()

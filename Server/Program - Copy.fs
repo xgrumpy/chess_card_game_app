@@ -33,6 +33,10 @@ open State.Lobby
 
 open System.Net
 open System.Net.Mail
+open System.Net.Http
+open System.Net.Http.Headers
+open System.Threading.Tasks
+open System.Collections.Generic
 
 // SignalR connection id -> uid
 let connections = new Collections.CacheMap<string,User>()
@@ -324,44 +328,54 @@ let subscribeHandler (session:string, token:string): HttpHandler =
                 | None -> Json.Null() |> Json.format         
         setContentType "application/json" >=> setBodyFromString res
 
-let sendEmailWithGmail (username: string, password: string, fromAddress: string, toAddress: string, subject: string, body: string) =
-    // Create a new instance of the MailMessage class
-    let mail = new MailMessage(fromAddress, toAddress, subject, body)
-    
-    // Set up the SMTP client
-    let smtpClient = new SmtpClient("smtp.gmail.com", 587)
-    smtpClient.Credentials <- NetworkCredential(username, password)
-    smtpClient.EnableSsl <- true // Enable SSL/TLS
-
-    // Send the email
-    try
-        smtpClient.Send(mail)
-        printfn "Email sent successfully."
-    with
-    | ex -> printfn "Failed to send email: %s" (ex.Message)
+let sendEmailWithMailgun (apiKey: string, domain: string, fromEmail: string, toEmail: string, subject: string, text: string) : Task<bool> =
+    async {
+        // Create an instance of HttpClient
+        use httpClient = new HttpClient()
+        // Configure the base address for the Mailgun API
+        httpClient.BaseAddress <- Uri($"https://api.mailgun.net/v3/{domain}/messages")
+        // Add basic authentication header using the API key
+        httpClient.DefaultRequestHeaders.Authorization <- AuthenticationHeaderValue("Basic", Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"api:{apiKey}")))
+        // Create form data for the email message
+        let formData = new FormUrlEncodedContent([
+            KeyValuePair<string, string>("from", fromEmail)
+            KeyValuePair<string, string>("to", toEmail)
+            KeyValuePair<string, string>("subject", subject)
+            KeyValuePair<string, string>("text", text)
+        ])
+        // Send the POST request
+        let! response = httpClient.PostAsync("", formData) |> Async.AwaitTask
+        // Check the response status code
+        if response.IsSuccessStatusCode then
+            return true
+        else
+            // Read the response body for more information about the failure
+            let! responseBody = response.Content.ReadAsStringAsync() |> Async.AwaitTask
+            return false
+    } |> Async.StartAsTask
 
 
 type SendEmailMsg = 
-    { Uid:string; Title:string; Message:string}
+    { Uid:string; Message:string}
 
 let sendEmail (body:string) (logger:ILogger) =
     let body' = Decode.Auto.fromString<SendEmailMsg>(body,SnakeCase)
     match body' with
     | Ok r ->
-        let subject = r.Title // Email subject
-        let username = "Jamie.light22@gmail.com" // Your Gmail email address
-        let password = "uaji njoy ulpu mdua" // Your Gmail password or app password
-        let fromAddress = "Jamie.light22@gmail.com" // Sender's email address
-        let mutable toAddress = "";
-        match getEmailById r.Uid with
-            | Some email -> 
-                toAddress <- email 
-            | None ->
-                toAddress <- "";
-        let body = r.Message // Email body
+        let apiKey = "a9217130d1787548741dcb6d907a50c3-2175ccc2-a006eb5c" // Replace with your Mailgun API key
+        let domain = "sandbox7ae10265f8524eeb938c099dd3517643.mailgun.org" // Replace with your Mailgun domain
+        let fromEmail = "irontiger121@gmail.com" // Sender's email address
+        let toEmail = r.Uid // Recipient's email address
+        let subject = "Hi" // Email subject
+        let text = r.Message // Email text content
+
         // Send the email
-        sendEmailWithGmail(username, password, fromAddress, toAddress, subject, body)
-        Encode.Auto.toString(toAddress, SnakeCase) |> Some
+        let emailSentTask = sendEmailWithMailgun(apiKey, domain, fromEmail, toEmail, subject, text)
+        emailSentTask.Wait()
+        // let success = 1;
+        // let out = {| Result = if success > 0 then "Email sent successfully." else "Failed to send email" |} 
+        Encode.Auto.toString("Email sent successfully.", SnakeCase) |> Some
+
     | Error e ->
         log_activity("sendEmail","","error",e) |> ignore 
         logger.LogCritical (e)
@@ -391,6 +405,9 @@ let webApp =
                 route "/swap" >=> (handlerWrapper runSwap "swap")
             ] 
         setStatusCode 404 >=> text "Not Found" ]
+
+
+
 
 let errorHandler (ex : Exception) (logger : ILogger) =
     logger.LogError(ex, "An unhandled exception has occurred while executing the request.")

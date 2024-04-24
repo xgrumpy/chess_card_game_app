@@ -1,4 +1,5 @@
 import { Button, Divider, Form, Input, Collapse, Select, DatePicker, Tag } from "antd"
+import { message } from 'antd';
 import { VecBoardProps } from "./App"
 import { useEffect } from 'react'
 import { Space, Table, Tabs } from 'antd'
@@ -37,7 +38,6 @@ export function MessageBoard() {
     { name: "Kumar", message: "Nice to meet you", replay: "" },
     { name: "anonymous-user", message: "This board isn't very feature rich.", replay: "deadfa" }
   ];
-  console.log(messagesArray)
   return (
     <div className="message-board">
       <Table dataSource={messagesArray} pagination={{ pageSize: 50 }} scroll={{ y: 240 }} size="middle">
@@ -63,6 +63,34 @@ export function MessageBoard() {
 }
 
 export function SettingForm() {
+  const emailMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      console.log(payload);
+      const response = await fetch(`${httpScheme}://${host}/sendEmail`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      })
+      if (!response.ok) {
+        throw new Error('Network response was not ok')
+      }
+      console.log(response.json());
+      return response.json()
+    }
+  })
+  const getCookie = (name: string): string | undefined => {
+    const cookieValue = document.cookie
+      .split('; ')
+      .find(row => row.startsWith(name + '='));
+
+    if (cookieValue) {
+      return cookieValue.split('=')[1];
+    }
+    return undefined;
+  };
+
+  // Get the value of a cookie named 'cookieName'
+  const data = JSON.parse(getCookie('payload'));
+
   const accordionStyles = {
     width: '80%', // Set the desired width
   };
@@ -98,8 +126,6 @@ export function SettingForm() {
     console.log('Success:', values);
     let d = values.birthday.$d as Date
     let dd = d.toJSON()
-    console.log(dd)
-
     values.birthday = dd
     signupMutation.mutate(values)
   }
@@ -107,11 +133,24 @@ export function SettingForm() {
   const onFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
   }
-
+  const onContactFinish = (values: any) => {
+    if (values.contactUS && values.title) {
+      var sendData = {
+        uid: data.uid,
+        title: values.title,
+        message: values.contactUS
+      };
+      emailMutation.mutate(sendData)
+    } else {
+      message.error('Please enter your message.');
+    }
+  }
+  const onContactFailed = (errorInfo: any) => {
+    console.log('Failed:', errorInfo);
+  }
   return (
     <>
       <div className='container'>
-
       </div>
       <br />
       <div className='container'>
@@ -175,9 +214,27 @@ export function SettingForm() {
             <p>This is panel content 3</p>
           </Panel>
           <Panel header="Contact US" key="3">
-            <Form style={textCenter}>
-              <TextArea rows={6} />
-              <br/><br/>
+            <Form
+              name="contactUS"
+              style={textCenter}
+              onFinish={onContactFinish}
+              onFinishFailed={onContactFailed}
+              autoComplete="off">
+              <Form.Item<FieldType>
+                label="Title"
+                name="title"
+                rules={[{ message: 'Please input Title!' }]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item<FieldType>
+                name="contactUS"
+                rules={[{ message: 'Please input your Message!' }]}
+              >
+                <TextArea rows={6} />
+              </Form.Item>
+
+              <br /><br />
               <Button type="primary" htmlType="submit">
                 Send
               </Button>
@@ -197,7 +254,6 @@ export function Lobby({ state, dispatch }: ArenaProps) {
     mutationFn: async (uid: string) => {
       if (!state.userInfo)
         throw new Error('Bad state')
-
       const session = state.userInfo.session
       const response = await fetch(`${httpScheme}://${host}/subscribe/${session}/${uid}`)
       if (!response.ok)
@@ -210,7 +266,6 @@ export function Lobby({ state, dispatch }: ArenaProps) {
         dispatch({ type: 'login', user_is_white: isWhite, token: uid, opponent })
         navigate("/main")
       }
-
       return json
     },
   })
@@ -226,7 +281,7 @@ export function Lobby({ state, dispatch }: ArenaProps) {
     connectionR.invoke("SubscribeToLobbyFeed")
     connectionR.on("Lobby", (arr: object[]) => {
       dispatch({ type: 'lobby', users: arr })
-      console.log("updating lobby", arr)
+      // console.log("updating lobby", arr)
     })
 
     // @ts-ignore
@@ -258,7 +313,7 @@ export function Lobby({ state, dispatch }: ArenaProps) {
   function callback(key) {
     console.log(key);
   }
-  console.log(myData)
+  // console.log(myData)
   return (
     <>
       {/* {contextHolder} */}

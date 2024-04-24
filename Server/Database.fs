@@ -161,6 +161,23 @@ let loadUserActivity() =
     out
 
 
+let getEmailById(uid:string) =
+    use conn = createAndOpenConnection ()     
+    let sql = 
+        """
+        SELECT email
+        FROM users
+        WHERE uid = $uid
+        """
+    let cmd = createCommand conn sql
+    cmd.Parameters.AddWithValue("$uid", uid) |> ignore
+    use reader = cmd.ExecuteReader()
+    if reader.Read() then
+        let email = reader.GetString 0
+        Some email // Return Some email if found
+    else
+        None // Return None if not found
+
 let userById(uid:string) =
     use conn = createAndOpenConnection ()     
     let sql = 

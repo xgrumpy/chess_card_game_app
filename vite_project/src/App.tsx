@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer} from 'react'
+import React, { useEffect, useReducer } from 'react'
 import _, { min } from "lodash"
 import './App.css'
 import { Button, Col, ConfigProvider, Divider, Form, Input, List, Radio, Row, Typography, theme, RadioChangeEvent } from 'antd'
@@ -136,6 +136,33 @@ const initialState: State = {
   lobby: []
 }
 
+
+// function updateEloRating(playerA, playerB, outcome, K = 32) {
+//   // Get initial Elo ratings
+//   let ratingA = playerA.elo;
+//   let ratingB = playerB.elo;
+
+//   // Calculate expected scores
+//   const expectedA = 1 / (1 + Math.pow(10, (ratingB - ratingA) / 400));
+//   const expectedB = 1 / (1 + Math.pow(10, (ratingA - ratingB) / 400));
+
+//   // Determine actual scores based on outcome
+//   let scoreA, scoreB;
+//   if (outcome === 'A') {
+//     scoreA = 1;
+//     scoreB = 0;
+//   } else if (outcome === 'B') {
+//     scoreA = 0;
+//     scoreB = 1;
+//   } else {
+//     scoreA = 0.5;
+//     scoreB = 0.5;
+//   }
+
+//   // Update Elo ratings
+//   playerA.elo = ratingA + K * (scoreA - expectedA);
+//   playerB.elo = ratingB + K * (scoreB - expectedB);
+// }
 
 export interface VecBoardProps {
   dispatch: React.Dispatch<any>
@@ -540,7 +567,7 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
     let trumpSuit = suitForLogicalSq(state.destSquare)
     let counterSuit = counterSuitF(trumpSuit)
     let otherJ = "J" + counterSuit
-//    let trumpJ = "J" + trumpSuit
+    //    let trumpJ = "J" + trumpSuit
 
     let offeredSuit = offer.slice(-1)
     if (otherJ === offer) {
@@ -550,19 +577,19 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
     let matchingSuitCount = 0
     //let handHasTrumpJ = false
     let handHasOtherJ = false
-    
-    for (var i = 0; i<state.hand.length; i++) {
+
+    for (var i = 0; i < state.hand.length; i++) {
       let a = state.hand[i]
       if (offeredSuit == a.slice(-1)) ++matchingSuitCount
       if (a == otherJ) handHasOtherJ = true
-    //  if (a == trumpJ) handHasTrumpJ = true
+      //  if (a == trumpJ) handHasTrumpJ = true
     }
 
     let canFollowSuit = matchingSuitCount > 0
 
-    let canFollowSuitNotCountingLeftBower = ()=> {
+    let canFollowSuitNotCountingLeftBower = () => {
       if (offeredSuit == counterSuit) {
-        for (var i = 0; i<state.hand.length; i++) {
+        for (var i = 0; i < state.hand.length; i++) {
           let a = state.hand[i]
           // if we run into non-bower matching suit, we can follow
           if (offeredSuit == a.slice(-1) && a !== otherJ) {
@@ -570,7 +597,7 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
           }
         }
 
-        return false        
+        return false
       } else {
         return canFollowSuit
       }
@@ -583,9 +610,9 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
       } else {
         if (handHasOtherJ)
           return x !== otherJ
-        else 
+        else
           return false // can play anything
-      }    
+      }
     } else {
       if (canFollowSuitNotCountingLeftBower()) {
         return offeredSuit !== x.slice(-1) || x == otherJ// disable those that aren't the suit
@@ -593,7 +620,7 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
         return false // can play anything
       }
     }
-    
+
 
     return false
   }
@@ -844,10 +871,10 @@ function MainPage({ state, dispatch }: VecBoardProps) {
       if (state.result == '*' && state.inCheckmate != CheckMateState.NotInCheckmate) {
 
         if (state.inCheckmate === CheckMateState.WhiteIsCheckmated)
-          await connectionR.invoke('ConcludeCurrentGame',true)
-        else 
+          await connectionR.invoke('ConcludeCurrentGame', true)
+        else
           // must be black who is in checkmate
-          await connectionR.invoke('ConcludeCurrentGame',false)
+          await connectionR.invoke('ConcludeCurrentGame', false)
 
         // sleep for half a sec, so we don't inundate the server
         await sleep(500)
