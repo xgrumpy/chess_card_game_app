@@ -34,6 +34,13 @@ open State.Lobby
 open System.Net
 open System.Net.Mail
 
+open MailKit.Net.Smtp
+open MailKit.Security
+open MimeKit
+
+open SendGrid
+open SendGrid.Helpers.Mail
+
 // SignalR connection id -> uid
 let connections = new Collections.CacheMap<string,User>()
 
@@ -324,22 +331,35 @@ let subscribeHandler (session:string, token:string): HttpHandler =
                 | None -> Json.Null() |> Json.format         
         setContentType "application/json" >=> setBodyFromString res
 
-let sendEmailWithGmail (username: string, password: string, fromAddress: string, toAddress: string, subject: string, body: string) =
-    // Create a new instance of the MailMessage class
-    let mail = new MailMessage(fromAddress, toAddress, subject, body)
-    
-    // Set up the SMTP client
-    let smtpClient = new SmtpClient("smtp.gmail.com", 587)
-    smtpClient.Credentials <- NetworkCredential(username, password)
-    smtpClient.EnableSsl <- true // Enable SSL/TLS
+let sendEmailWithSendGrid (username: string, apiKey: string, fromAddress: string, toAddress: string, subject: string, body: string) =
+    async {
+        try
+            // Create a SendGrid client using the API key
+            let client = SendGridClient(apiKey)
 
-    // Send the email
-    try
-        smtpClient.Send(mail)
-        printfn "Email sent successfully."
-    with
-    | ex -> printfn "Failed to send email: %s" (ex.Message)
+            // Create a new email message
+            let message = SendGridMessage()
+            let fromEmail = EmailAddress(fromAddress, "Sender Name")
+            let toEmail = EmailAddress(toAddress, "Recipient Name")
+            message.SetFrom(fromEmail)
+            message.AddTo(toEmail)
+            message.SetSubject(subject)
+            message.AddContent(MimeType.Text, body)
 
+            // Send the email asynchronously
+            let! response = client.SendEmailAsync(message) |> Async.AwaitTask
+
+            // // Check the response status
+            if response.StatusCode = System.Net.HttpStatusCode.Accepted then
+                printfn "Email sent successfully!"
+            else
+                let temp = response.StatusCode.ToString();
+                printfn "Failed to send email: %s" temp
+        with
+        | ex ->
+            printfn "Failed to send email: %s" ex.Message
+    }
+    |> Async.RunSynchronously
 
 type SendEmailMsg = 
     { Uid:string; Title:string; Message:string}
@@ -350,7 +370,7 @@ let sendEmail (body:string) (logger:ILogger) =
     | Ok r ->
         let subject = r.Title // Email subject
         let username = "Jamie.light22@gmail.com" // Your Gmail email address
-        let password = "uaji njoy ulpu mdua" // Your Gmail password or app password
+        let password = "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" // Your Gmail password or app password
         let fromAddress = "Jamie.light22@gmail.com" // Sender's email address
         let mutable toAddress = "";
         match getEmailById r.Uid with
@@ -358,9 +378,7 @@ let sendEmail (body:string) (logger:ILogger) =
                 toAddress <- email 
             | None ->
                 toAddress <- "";
-        let body = r.Message // Email body
-        // Send the email
-        sendEmailWithGmail(username, password, fromAddress, toAddress, subject, body)
+        sendEmailWithSendGrid(username,password,fromAddress,toAddress,subject,r.Message)
         Encode.Auto.toString(toAddress, SnakeCase) |> Some
     | Error e ->
         log_activity("sendEmail","","error",e) |> ignore 

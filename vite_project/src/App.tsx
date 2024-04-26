@@ -136,34 +136,6 @@ const initialState: State = {
   lobby: []
 }
 
-
-// function updateEloRating(playerA, playerB, outcome, K = 32) {
-//   // Get initial Elo ratings
-//   let ratingA = playerA.elo;
-//   let ratingB = playerB.elo;
-
-//   // Calculate expected scores
-//   const expectedA = 1 / (1 + Math.pow(10, (ratingB - ratingA) / 400));
-//   const expectedB = 1 / (1 + Math.pow(10, (ratingA - ratingB) / 400));
-
-//   // Determine actual scores based on outcome
-//   let scoreA, scoreB;
-//   if (outcome === 'A') {
-//     scoreA = 1;
-//     scoreB = 0;
-//   } else if (outcome === 'B') {
-//     scoreA = 0;
-//     scoreB = 1;
-//   } else {
-//     scoreA = 0.5;
-//     scoreB = 0.5;
-//   }
-
-//   // Update Elo ratings
-//   playerA.elo = ratingA + K * (scoreA - expectedA);
-//   playerB.elo = ratingB + K * (scoreB - expectedB);
-// }
-
 export interface VecBoardProps {
   dispatch: React.Dispatch<any>
   state: State
@@ -853,7 +825,7 @@ function MainPage({ state, dispatch }: VecBoardProps) {
     }
 
   }, [])
-
+  console.log(state)
   if (!state.login)
     return (<><Typography.Text>No Game</Typography.Text></>)
 

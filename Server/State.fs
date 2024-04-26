@@ -559,9 +559,6 @@ let makeMove (sourcePiece:PieceCode, moveData:AgenentMsgData, data:GameStateAndI
             position
             
 
-           
-
-
         // an outcome where the attacker fails
         let failedCapture = position |> Map.remove move.Source 
 
@@ -715,21 +712,46 @@ let mainAgentFunc (inbox:MailboxProcessor<AgentMsg>) = async {
                         match sideToResign with
                         | None -> if data.UserIsWhite then Wins Black else Wins White
                         | Some sideToResign -> if sideToResign = White then Wins Black else Wins White
-                    
+                                                
                     let proceed (rw:int, rb:int) = 
                         archive.TryUpdateGame (data.Identifier) (fun g -> {g with Result = r}) |> ignore
                         let wstat = updateRating (w,rw)
                         let bstat = updateRating (b,rb)
                         printfn "Updated rating: %A and %A" (w,wstat,rw) (b,bstat,rb)
 
+                    let updateEloRating (ratingA: float, ratingB: float, result: string, k: float) =
+                        // Calculate expected scores
+                        let expectedA = 1.0 / (1.0 + 10.0 ** ((ratingB - ratingA) / 400.0))
+                        let expectedB = 1.0 / (1.0 + 10.0 ** ((ratingA - ratingB) / 400.0))
+                        // Determine actual scores based on outcome
+                        let (scoreA, scoreB) =
+                            match result with
+                            | "A" -> (1.0, 0.0)
+                            | "B" -> (0.0, 1.0)
+                            | _ -> (0.5, 0.5)
+                        // Update Elo ratings
+                        let newRatingA = ratingA + k * (scoreA - expectedA)
+                        let newRatingB = ratingB + k * (scoreB - expectedB)
+                        // // Return updated ratings as a tuple
+                        Some (newRatingA, newRatingB)
+                        
                     if lw <> [] && lb <> [] then
                         let hw = lw.Head
                         let hb = lb.Head
                         match r with 
                         | Wins White -> 
-                            (hw.Rating + 10, max (hb.Rating - 10) 0) |> proceed
+                            match updateEloRating (hw.Rating, hb.Rating, "A", 32) with
+                            | Some (newRatingA, newRatingB) -> 
+                                (int newRatingA, int newRatingB) |> proceed
+                            | None ->
+                                printfn "Nothing";
+                            
                         | Wins Black -> 
-                            (max (hw.Rating - 10) 0, hb.Rating + 10) |> proceed
+                            match updateEloRating (hw.Rating, hb.Rating, "B", 32) with
+                            | Some (newRatingA, newRatingB) -> 
+                                (int newRatingA, int newRatingB) |> proceed
+                            | None ->
+                                printfn "Nothing";
                         | Undefined -> raise (System.Diagnostics.UnreachableException())
             | None -> ()
             
@@ -739,8 +761,6 @@ let mainAgentFunc (inbox:MailboxProcessor<AgentMsg>) = async {
     }
 
 let mainAgent = mainAgentFunc |> MailboxProcessor.Start 
-
-
 
 module Lobby =
     type LobbyDatum = {User:string;Rating:int;Timestamp:int64}

@@ -42,8 +42,8 @@ export function MessageBoard() {
     <div className="message-board">
       <Table dataSource={messagesArray} pagination={{ pageSize: 50 }} scroll={{ y: 240 }} size="middle">
         <Column title="name" dataIndex="name" width="20%" key="user" />
-        <Column title="message" dataIndex="message" key="rating" />
-        <Column title="replay" dataIndex="replay" key="rating"
+        <Column title="message" dataIndex="message"  />
+        <Column title="replay" dataIndex="replay" 
           render={(_: any, record: any) => (
             <Space size="middle">
               {record.replay ? (
@@ -313,7 +313,7 @@ export function Lobby({ state, dispatch }: ArenaProps) {
   function callback(key) {
     console.log(key);
   }
-  // console.log(myData)
+  console.log(myData)
   return (
     <>
       {/* {contextHolder} */}
