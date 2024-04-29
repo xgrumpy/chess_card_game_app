@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer } from 'react'
+import React, { useEffect, useReducer, useState } from 'react'
 import _, { min } from "lodash"
 import './App.css'
 import { Button, Col, ConfigProvider, Divider, Form, Input, List, Radio, Row, Typography, theme, RadioChangeEvent } from 'antd'
@@ -139,6 +139,7 @@ const initialState: State = {
 export interface VecBoardProps {
   dispatch: React.Dispatch<any>
   state: State
+  toggleTheme: any
 }
 
 
@@ -1010,9 +1011,19 @@ const queryClient = new QueryClient()
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState)
 
+  const [currentTheme, setCurrentTheme] = useState('light'); // Default to light theme
+
+  // Function to toggle the theme
+  const toggleTheme = () => {
+    setCurrentTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
+  };
+
+  // Determine the Ant Design theme algorithm based on the current theme
+  const themeAlgorithm = currentTheme === 'light' ? theme.defaultAlgorithm : theme.darkAlgorithm;
+
   return (
     <>
-      <ConfigProvider theme={{ algorithm: theme.darkAlgorithm, }}>
+      <ConfigProvider theme={{ algorithm: themeAlgorithm }}>
         <QueryClientProvider client={queryClient}>
           <HashRouter>
             <Routes>
@@ -1020,7 +1031,7 @@ function App() {
                 <Route index element={<Signin state={state} dispatch={dispatch} />} />
                 {/* <Route path="old" element={<InitialPage state={state} dispatch={dispatch} />} /> */}
                 {/* <Route path="arena" element={<Arena state={state} dispatch={dispatch} />} /> */}
-                <Route path="lobby" element={<Lobby state={state} dispatch={dispatch} />} />
+                <Route path="lobby" element={<Lobby toggleTheme={toggleTheme} state={state} dispatch={dispatch} />} />
                 {/* <Route path="blogs/:userId" element={<Blogs />} /> */}
                 <Route path="main" element={<MainPage state={state} dispatch={dispatch} />} />
                 <Route path="*" element={<NoPage />} />

@@ -11,7 +11,11 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
-body {
-  background-image: url("/what-the-hex-dark.webp");
-  background-repeat: repeat;
+.dark_body {
+  background-image: url("/bg_dark.png");
+  color: #ffffff
+}
+.light_body {
+  background-image: url("/bg_light.png");
+  color: #000000
 }

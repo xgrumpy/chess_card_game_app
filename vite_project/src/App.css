@@ -60,3 +60,8 @@
   font: bold 30px sans-serif;
 } */
 
+.switchj_div{
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}

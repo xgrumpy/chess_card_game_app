@@ -9,6 +9,7 @@ doctnet run
 
 ```
 cd vite_porject
+npm install --global yarn
 npm install vite
 yarn install
 yarn dev

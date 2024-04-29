@@ -66,8 +66,6 @@ let log_activity (cat:string, uid:string, event:string,data:string) =
 
     cmd.ExecuteNonQuery()
 
-
-
 let createUser (uid:string, passHash:string,  salt:string, birthday:string, gender:string, email:string) = 
     use conn = createAndOpenConnection()
     let sql = 
@@ -84,6 +82,24 @@ let createUser (uid:string, passHash:string,  salt:string, birthday:string, gend
     cmd.Parameters.AddWithValue("$gender", gender) |> ignore
     cmd.Parameters.AddWithValue("$email", email) |> ignore
     cmd.Parameters.AddWithValue("$salt", salt) |> ignore
+
+    try cmd.ExecuteNonQuery() with _ -> 0
+
+let updateUser (uid:string,  birthday:string, gender:string, email:string, currentUid:string) = 
+    use conn = createAndOpenConnection()
+    let sql = 
+        """
+        UPDATE users 
+        SET uid = $uid, birthday= $birthday, gender = $gender, email = $email
+        WHERE uid=$currentUid
+        """
+    let cmd = createCommand conn sql
+
+    cmd.Parameters.AddWithValue("$uid", uid) |> ignore
+    cmd.Parameters.AddWithValue("$birthday", birthday) |> ignore
+    cmd.Parameters.AddWithValue("$gender", gender) |> ignore
+    cmd.Parameters.AddWithValue("$email", email) |> ignore
+    cmd.Parameters.AddWithValue("$currentUid", currentUid) |> ignore
 
     try cmd.ExecuteNonQuery() with _ -> 0
 
@@ -159,7 +175,6 @@ let loadUserActivity() =
 
         out <- {| Uid=uid; Session = session; Delta=timestamp |} :: out
     out
-
 
 let getEmailById(uid:string) =
     use conn = createAndOpenConnection ()     

@@ -1,7 +1,7 @@
-import { Button, Divider, Form, Input, Collapse, Select, DatePicker, Tag } from "antd"
+import { Button, Divider, Form, Input, Collapse, Select, DatePicker, Tag, Switch } from "antd"
 import { message } from 'antd';
 import { VecBoardProps } from "./App"
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Space, Table, Tabs } from 'antd'
 import './App.css'
 import { useNavigate } from "react-router-dom"
@@ -42,8 +42,8 @@ export function MessageBoard() {
     <div className="message-board">
       <Table dataSource={messagesArray} pagination={{ pageSize: 50 }} scroll={{ y: 240 }} size="middle">
         <Column title="name" dataIndex="name" width="20%" key="user" />
-        <Column title="message" dataIndex="message"  />
-        <Column title="replay" dataIndex="replay" 
+        <Column title="message" dataIndex="message" />
+        <Column title="replay" dataIndex="replay"
           render={(_: any, record: any) => (
             <Space size="middle">
               {record.replay ? (
@@ -62,7 +62,7 @@ export function MessageBoard() {
   );
 }
 
-export function SettingForm() {
+export function SettingForm({ toggleTheme = () => {}}) {
   const emailMutation = useMutation({
     mutationFn: async (payload: any) => {
       console.log(payload);
@@ -99,38 +99,38 @@ export function SettingForm() {
     textAlign: 'center'
   };
 
-  const signupMutation = useMutation({
+  const updateAccountMutation = useMutation({
     mutationFn: async (payload: any) => {
-      const response = await fetch(`${httpScheme}://${host}/signup`, {
+      console.log(payload);
+      const response = await fetch(`${httpScheme}://${host}/updateUser`, {
         method: 'POST',
         body: JSON.stringify(payload)
       })
-
       if (!response.ok) {
         throw new Error('Network response was not ok')
       }
+      console.log(response.json());
       return response.json()
     }
   })
 
   type FieldType = {
     uid?: string
-    password?: string
     gender?: string
     birthday?: string
     email?: string
-    // acceptTerms?: string
+    current_uid?: string
   }
 
-  const onSignupFinish = (values: any) => {
-    console.log('Success:', values);
+  const onUpdateAccountFinish = (values: any) => {
     let d = values.birthday.$d as Date
     let dd = d.toJSON()
     values.birthday = dd
-    signupMutation.mutate(values)
+    values.current_uid = data.uid;
+    updateAccountMutation.mutate(values)
   }
 
-  const onFinishFailed = (errorInfo: any) => {
+  const onUpdateAccountFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
   }
   const onContactFinish = (values: any) => {
@@ -148,6 +148,29 @@ export function SettingForm() {
   const onContactFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
   }
+
+
+  const [isChecked, setIsChecked] = useState(false);
+  const [themeSwitchName, setThemeSwitchName] = useState('Initial Header');
+
+  // Event handler to toggle the switch's state
+  const handleSwitchChange = (checked) => {
+    // Update the state based on the switch's new value
+    setIsChecked(checked);
+    // Optionally, you can handle other logic here when the switch changes
+    if (checked) {
+      setThemeSwitchName("Light theme");
+      document.body.classList.remove("dark_body");
+      document.body.classList.add("light_body");
+      toggleTheme("dark");
+    } else {
+      setThemeSwitchName("Dark theme");
+      document.body.classList.remove("light_body");
+      document.body.classList.add("dark_body");
+      toggleTheme("light");
+    }
+  };
+
   return (
     <>
       <div className='container'>
@@ -162,8 +185,8 @@ export function SettingForm() {
               wrapperCol={{ span: 16 }}
               style={{ width: '70%', maxWidth: 600 }}
               initialValues={{ remember: true }}
-              onFinish={onSignupFinish}
-              onFinishFailed={onFinishFailed}
+              onFinish={onUpdateAccountFinish}
+              onFinishFailed={onUpdateAccountFinishFailed}
               autoComplete="off"
             >
               <Form.Item<FieldType>
@@ -199,7 +222,6 @@ export function SettingForm() {
               <Form.Item<FieldType>
                 label="Birthday"
                 name="birthday"
-                rules={[{ message: 'Please provide your gender!' }]}
               >
                 <DatePicker />
               </Form.Item>
@@ -211,7 +233,16 @@ export function SettingForm() {
             </Form>
           </Panel>
           <Panel header="Theme" key="2">
-            <p>This is panel content 3</p>
+            <div className="switchj_div">
+              <h3>{themeSwitchName}</h3>&nbsp;&nbsp;&nbsp;
+              {/* Render the Switch component */}
+              <Switch
+                checked={isChecked} // Bind the switch's state to the component's state
+                onChange={handleSwitchChange} // Handle switch change events
+                checkedChildren="On" // Optional: Label for the "on" state
+                unCheckedChildren="Off" // Optional: Label for the "off" state
+              />
+            </div>
           </Panel>
           <Panel header="Contact US" key="3">
             <Form
@@ -246,7 +277,7 @@ export function SettingForm() {
   )
 }
 
-export function Lobby({ state, dispatch }: ArenaProps) {
+export function Lobby({ toggleTheme = () => {} , state, dispatch }: ArenaProps) {
   const navigate = useNavigate()
   let myUid = state.userInfo?.uid
 
@@ -345,7 +376,7 @@ export function Lobby({ state, dispatch }: ArenaProps) {
             <MessageBoard />
           </TabPane>
           <TabPane tab="Setting" key="settings">
-            <SettingForm />
+            <SettingForm toggleTheme={toggleTheme} />
           </TabPane>
         </Tabs>
       </div>

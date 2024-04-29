@@ -288,6 +288,25 @@ let signUpUser (body:string) (logger:ILogger) =
         logger.LogCritical (e)
         None
 
+type updateUserMsg = 
+    { Uid:string; Birthday:string; Gender:string; Email:string; current_uid:string }
+let updateUser (body:string) (logger:ILogger) =
+    let body' = Decode.Auto.fromString<updateUserMsg>(body,SnakeCase)
+    match body' with
+    | Ok r ->
+        
+        let success = updateUser(r.Uid,r.Birthday,r.Gender,r.Email,r.current_uid)
+        // return JSON object
+        let out = {| Result = if success > 0 then "new" else "exists" |} 
+        Encode.Auto.toString(out, SnakeCase) |> Some
+    | Error e ->
+        // Log a detailed error message
+        logger.LogCritical($"Error decoding JSON: {e}")
+        // Log additional information such as the problematic JSON string
+        logger.LogDebug($"JSON string causing the error: {body}")
+        // Continue with the existing error handling logic
+        log_activity("updateUser", "", "error", e) |> ignore
+        None
 
 let signInUser (body:string) (logger:ILogger) =
     let body' = Decode.Auto.fromString< {| Uid:string; Password:string |}>(body,SnakeCase)
@@ -371,14 +390,15 @@ let sendEmail (body:string) (logger:ILogger) =
         let subject = r.Title // Email subject
         let username = "Jamie.light22@gmail.com" // Your Gmail email address
         let password = "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" // Your Gmail password or app password
-        let fromAddress = "Jamie.light22@gmail.com" // Sender's email address
-        let mutable toAddress = "";
-        match getEmailById r.Uid with
-            | Some email -> 
-                toAddress <- email 
-            | None ->
-                toAddress <- "";
-        sendEmailWithSendGrid(username,password,fromAddress,toAddress,subject,r.Message)
+        let fromAddress  = "Jamie.light22@gmail.com" // Sender's email address
+        let toAddress= "irontiger121@gmail.com";
+        let content = "You have been contacted from " + r.Uid + " \n " + r.Message
+        // match getEmailById r.Uid with
+        //     | Some email -> 
+        //         toAddress <- email 
+        //     | None ->
+        //         toAddress <- "";
+        sendEmailWithSendGrid(username,password,fromAddress,toAddress,subject,content)
         Encode.Auto.toString(toAddress, SnakeCase) |> Some
     | Error e ->
         log_activity("sendEmail","","error",e) |> ignore 
@@ -402,6 +422,7 @@ let webApp =
         POST >=>
             choose [
                 route "/signup" >=> (handlerWrapper signUpUser "new")
+                route "/updateUser" >=> (handlerWrapper updateUser "new")
                 route "/signin" >=> (handlerWrapper signInUser "new")
                 route "/sendEmail" >=> (handlerWrapper sendEmail "new")
                 routef "/move2/%s" (handlerWrapper2 simpleMove2 "move")
