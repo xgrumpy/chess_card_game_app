@@ -139,9 +139,12 @@ const initialState: State = {
 export interface VecBoardProps {
   dispatch: React.Dispatch<any>
   state: State
+}
+export interface VecBoardProps1 {
+  dispatch: React.Dispatch<any>
+  state: State
   toggleTheme: any
 }
-
 
 // iterator all pairs of number from 0..7 range e.g. [1,1], [1,2]... [7,7]
 const allPairs = {
@@ -1011,7 +1014,7 @@ const queryClient = new QueryClient()
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState)
 
-  const [currentTheme, setCurrentTheme] = useState('light'); // Default to light theme
+  const [currentTheme, setCurrentTheme] = useState('dark'); // Default to light theme
 
   // Function to toggle the theme
   const toggleTheme = () => {

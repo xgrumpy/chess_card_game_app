@@ -1,6 +1,6 @@
 import { Button, Divider, Form, Input, Collapse, Select, DatePicker, Tag, Switch } from "antd"
 import { message } from 'antd';
-import { VecBoardProps } from "./App"
+import { VecBoardProps1 } from "./App"
 import { useEffect, useState } from 'react'
 import { Space, Table, Tabs } from 'antd'
 import './App.css'
@@ -16,7 +16,7 @@ const { Option } = Select
 const { Panel } = Collapse;
 const { TextArea } = Input;
 
-interface ArenaProps extends VecBoardProps {
+interface ArenaProps extends VecBoardProps1 {
 }
 
 export function MessageBoard() {
