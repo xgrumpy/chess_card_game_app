@@ -1,7 +1,7 @@
 import { Button, Divider, Form, Input, Collapse, Select, DatePicker, Tag, Switch } from "antd"
 import { message } from 'antd';
 import { VecBoardProps1 } from "./App"
-import { useEffect, useState } from 'react'
+import { useEffect, useState, CSSProperties  } from 'react'
 import { Space, Table, Tabs } from 'antd'
 import './App.css'
 import { useNavigate } from "react-router-dom"
@@ -51,7 +51,7 @@ export function MessageBoard() {
                   {record.replay}
                 </Tag>
               ) : (
-                <Button onClick={() => acceptProposal(record.replay)}>
+                <Button onClick={() => {}}>
                   replay
                 </Button>
               )}
@@ -77,7 +77,7 @@ export function SettingForm({ toggleTheme = () => {}}) {
       return response.json()
     }
   })
-  const getCookie = (name: string): string | undefined => {
+  const getCookie = (name: string): any => {
     const cookieValue = document.cookie
       .split('; ')
       .find(row => row.startsWith(name + '='));
@@ -95,7 +95,7 @@ export function SettingForm({ toggleTheme = () => {}}) {
     width: '80%', // Set the desired width
   };
 
-  const textCenter = {
+  const textCenter: CSSProperties = {
     textAlign: 'center'
   };
 
@@ -120,6 +120,8 @@ export function SettingForm({ toggleTheme = () => {}}) {
     birthday?: string
     email?: string
     current_uid?: string
+    title?: string
+    contactUS?:string
   }
 
   const onUpdateAccountFinish = (values: any) => {
@@ -154,20 +156,20 @@ export function SettingForm({ toggleTheme = () => {}}) {
   const [themeSwitchName, setThemeSwitchName] = useState('Initial Header');
 
   // Event handler to toggle the switch's state
-  const handleSwitchChange = (checked) => {
+  const handleSwitchChange = () => {
     // Update the state based on the switch's new value
-    setIsChecked(checked);
+    setIsChecked(!isChecked);
     // Optionally, you can handle other logic here when the switch changes
-    if (checked) {
+    if (!isChecked) {
       setThemeSwitchName("Light theme");
       document.body.classList.remove("dark_body");
       document.body.classList.add("light_body");
-      toggleTheme("dark");
+      toggleTheme();
     } else {
       setThemeSwitchName("Dark theme");
       document.body.classList.remove("light_body");
       document.body.classList.add("dark_body");
-      toggleTheme("light");
+      toggleTheme();
     }
   };
 
@@ -341,7 +343,7 @@ export function Lobby({ toggleTheme = () => {} , state, dispatch }: ArenaProps) 
     connectionR?.invoke("AcceptGameProposal", uid)
   }
 
-  function callback(key) {
+  function callback(key: string): void {
     console.log(key);
   }
   console.log(myData)
