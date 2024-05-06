@@ -374,7 +374,7 @@ export const VecBoard = ({ state, dispatch }: VecBoardProps) => {
   </svg>
 }
 
-function reducer(state: State, action: any): State {
+function reducer(state: State, action: any , dispatch: React.Dispatch<any>): State {
   switch (action.type) {
     case 'active_users':
       return { ...state, activeUsers: action.users }
@@ -404,34 +404,34 @@ function reducer(state: State, action: any): State {
     case 'leaving':
       //console.log(`leaving: ${action.logicalSq}`)
       return { ...state, hoverSquare: null }
-    case 'clicked':
+    case 'clicked': 
+      
       let logicalSq = action.logicalSq
       let c = tupleCoordsToSquare(logicalSq)
-      console.log(c, action.clickCount)
 
       if (inCompletedGameState(state))
-        return state
+        return { ...state, card: "" }
 
       if (_.isEqual(state.sourceSquare, logicalSq))
-        return { ...state, sourceSquare: null, destSquare: null }
+        return { ...state, sourceSquare: null, destSquare: null , card: ""}
 
 
       if (state.position.has(c)) {
         let myColorPiece = state.login!.user_is_white == isWhite(state.position.get(c)!)
         if (state.sourceSquare === null && myColorPiece)
-          return { ...state, sourceSquare: logicalSq }
+          return { ...state, sourceSquare: logicalSq , card: ""}
       }
 
       if (state.sourceSquare !== null) {
         if (_.isEqual(state.destSquare, logicalSq)) {
           if (!unableToMakeMoves(state)) {
-            return { ...state, destSquare: logicalSq, moveCount: state.moveCount + 1 }
+            return { ...state, destSquare: logicalSq, moveCount: state.moveCount + 1, card: "" }
           }
         }
-        return { ...state, destSquare: logicalSq }
+        return { ...state, destSquare: logicalSq , card: ""}
       }
 
-      return { ...state, sourceSquare: null, destSquare: null }
+      return { ...state, sourceSquare: null, destSquare: null , card: ""}
 
     case 'subscribe':
       let position = new Map(Object.entries(action.position)) as Map<string, string>
@@ -829,7 +829,7 @@ function MainPage({ state, dispatch }: VecBoardProps) {
     }
 
   }, [])
-  console.log(state)
+  // console.log(state)
   if (!state.login)
     return (<><Typography.Text>No Game</Typography.Text></>)
 

@@ -84,7 +84,7 @@ type CardChooserProps = {
       let isDisabled = props.disabled(s)
       let bg = isDisabled ? disabledBg : cardBackgroundColor //'#93c572' // '#C1E1C1'
       let p: React.CSSProperties = { width: ww, height: hh, backgroundColor: bg }
-      if (props.selected == s) {
+      if (props.selected == s && !isDisabled) {
         p['borderColor'] = 'white'
         p['borderWidth'] = 3
       }
@@ -94,7 +94,7 @@ type CardChooserProps = {
           <Card
             hoverable
             style={p}
-            cover={<img alt="" src={image} style={q} onClick={() => { props.onSelectionChanged(s) }} />}
+            cover={<img alt="" src={image} style={q} onClick={() => { if (!isDisabled) props.onSelectionChanged(s) }} />}
           >
           </Card>
         </Col>)
