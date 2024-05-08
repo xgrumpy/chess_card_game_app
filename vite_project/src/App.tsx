@@ -374,7 +374,7 @@ export const VecBoard = ({ state, dispatch }: VecBoardProps) => {
   </svg>
 }
 
-function reducer(state: State, action: any , dispatch: React.Dispatch<any>): State {
+function reducer(state: State, action: any, dispatch: React.Dispatch<any>): State {
   switch (action.type) {
     case 'active_users':
       return { ...state, activeUsers: action.users }
@@ -404,8 +404,8 @@ function reducer(state: State, action: any , dispatch: React.Dispatch<any>): Sta
     case 'leaving':
       //console.log(`leaving: ${action.logicalSq}`)
       return { ...state, hoverSquare: null }
-    case 'clicked': 
-      
+    case 'clicked':
+
       let logicalSq = action.logicalSq
       let c = tupleCoordsToSquare(logicalSq)
 
@@ -413,13 +413,13 @@ function reducer(state: State, action: any , dispatch: React.Dispatch<any>): Sta
         return { ...state, card: "" }
 
       if (_.isEqual(state.sourceSquare, logicalSq))
-        return { ...state, sourceSquare: null, destSquare: null , card: ""}
+        return { ...state, sourceSquare: null, destSquare: null, card: "" }
 
 
       if (state.position.has(c)) {
         let myColorPiece = state.login!.user_is_white == isWhite(state.position.get(c)!)
         if (state.sourceSquare === null && myColorPiece)
-          return { ...state, sourceSquare: logicalSq , card: ""}
+          return { ...state, sourceSquare: logicalSq, card: "" }
       }
 
       if (state.sourceSquare !== null) {
@@ -428,10 +428,10 @@ function reducer(state: State, action: any , dispatch: React.Dispatch<any>): Sta
             return { ...state, destSquare: logicalSq, moveCount: state.moveCount + 1, card: "" }
           }
         }
-        return { ...state, destSquare: logicalSq , card: ""}
+        return { ...state, destSquare: logicalSq, card: "" }
       }
 
-      return { ...state, sourceSquare: null, destSquare: null , card: ""}
+      return { ...state, sourceSquare: null, destSquare: null, card: "" }
 
     case 'subscribe':
       let position = new Map(Object.entries(action.position)) as Map<string, string>
@@ -535,17 +535,22 @@ function counterSuitF(s: string) {
 function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any> }) {
 
   let dealDisabledOnOffer = (x: string) => {
+
     let offer = state.offer!
 
     if (state.destSquare === null)
       return false
 
     let trumpSuit = suitForLogicalSq(state.destSquare)
-    let counterSuit = counterSuitF(trumpSuit)
-    let otherJ = "J" + counterSuit
+    // let counterSuit = counterSuitF(trumpSuit)
+    // let otherJ = "J" + counterSuit
     //    let trumpJ = "J" + trumpSuit
 
     let offeredSuit = offer.slice(-1)
+
+    let counterSuit = counterSuitF(offeredSuit)
+    let otherJ = "J" + counterSuit
+
     if (otherJ === offer) {
       offeredSuit = trumpSuit
     }
@@ -556,11 +561,14 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
 
     for (var i = 0; i < state.hand.length; i++) {
       let a = state.hand[i]
+
       if (offeredSuit == a.slice(-1)) ++matchingSuitCount
+      // if (a.slice(0, 1) == "J") handHasOtherJ = true
+
       if (a == otherJ) handHasOtherJ = true
       //  if (a == trumpJ) handHasTrumpJ = true
     }
-
+   
     let canFollowSuit = matchingSuitCount > 0
 
     let canFollowSuitNotCountingLeftBower = () => {
@@ -571,6 +579,9 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
           if (offeredSuit == a.slice(-1) && a !== otherJ) {
             return true
           }
+          // if (offeredSuit == a.slice(-1) && a.slice(0, 1) == "J") {
+          //   return true
+          // }
         }
 
         return false
@@ -580,24 +591,23 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
 
     }
 
-    if (offeredSuit == trumpSuit) {
+    // if (offeredSuit == trumpSuit) {
       if (canFollowSuit) {
-        return offeredSuit !== x.slice(-1) // disable those that aren't the suit  
+        return offeredSuit !== x.slice(-1) && x !== otherJ // disable those that aren't the suit  
       } else {
         if (handHasOtherJ)
           return x !== otherJ
+          // return x.slice(0, 1) !== "J"
         else
           return false // can play anything
       }
-    } else {
-      if (canFollowSuitNotCountingLeftBower()) {
-        return offeredSuit !== x.slice(-1) || x == otherJ// disable those that aren't the suit
-      } else {
-        return false // can play anything
-      }
-    }
-
-
+    // } else {
+    //   if (canFollowSuitNotCountingLeftBower()) {
+    //     return offeredSuit !== x.slice(-1) && x.slice(0, 1) !== "J"// disable those that aren't the suit
+    //   } else {
+    //     return false // can play anything
+    //   }
+    // }
     return false
   }
 
@@ -676,7 +686,7 @@ function makeMove(state: State, dispatch: React.Dispatch<any>) {
       source_position: Object.fromEntries(state.position),
       position: Object.fromEntries(resultingPosition)
     }
-
+    console.log('move2: ', payload)
     let data = await fetch(`${httpScheme}://${host}/move2/${session}`, {
       method: 'POST',
       body: JSON.stringify(payload)

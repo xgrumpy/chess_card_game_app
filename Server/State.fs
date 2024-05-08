@@ -452,7 +452,7 @@ let euchreComparator (trumpSuit:CardSuit) (opening:CompositeCard) (response:Comp
 
     let otherJ = cc J (counterSuit trumpSuit)
     let trupRun = [tt J; tt A; tt K; tt Q; tt Ten; tt Nine ]
-    let openingRun = [oo A; oo K; oo Q; oo J; oo Ten; oo Nine ]
+    let openingRun = [oo J; oo A; oo K; oo Q; oo Ten; oo Nine ]
 
     let run = if trumpSuit = opening.Suit then trupRun else trupRun @ openingRun
 
@@ -562,6 +562,7 @@ let makeMove (sourcePiece:PieceCode, moveData:AgenentMsgData, data:GameStateAndI
         // an outcome where the attacker fails
         let failedCapture = position |> Map.remove move.Source 
 
+
         let outcome = comparator currentCard crd
         defendingCard <- Some crd
 
@@ -583,6 +584,7 @@ let makeMove (sourcePiece:PieceCode, moveData:AgenentMsgData, data:GameStateAndI
         pos, SideToMove(color.Counterpart), (nextDeal crd)
 
     let skip = position, currentTurn, deal
+   
     let position', nextTurn, deal'  = 
         match dstPiece, moveData.MaybeCard, currentTurn  with
         | None, None, SideToMove color -> 
@@ -684,6 +686,7 @@ let mainAgentFunc (inbox:MailboxProcessor<AgentMsg>) = async {
         | MakeSimpleMove (moveData, logger, chnl) -> 
             option {
                 let! data = dataForUser (moveData.User)
+                
                 sprintf "in: %A" (moveData.ToLogDescription()) |> logger.LogTrace
                 sprintf "data: %A" data |> logger.LogTrace
                 if data.Game.Position <> moveData.SourcePosition then 

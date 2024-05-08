@@ -156,7 +156,7 @@ type GameHub () =
 
 
     member this.SendMessage(message:string, blha:string):Task<string> =
-        System.Console.WriteLine(sprintf "%s, %s" message blha)
+        // System.Console.WriteLine(sprintf "%s, %s" message blha)
         task {
             return message + " and " + blha
         }
@@ -225,6 +225,9 @@ let handlerWrapper2 (compute:ApiArg->string option) (category:string) (session:s
 
 
 let simpleMove (body:string) (logger:ILogger): string option =
+
+    // System.Console.WriteLine(sprintf "addddddddddddddddddddddddd")
+
     let msg:MoveMsg = decode body
     let compositeCard = msg.Card |> Option.bind (CompositeCard.FromString)
     let suit = msg.Suit |> Option.bind (CardSuit.FromString)
@@ -244,6 +247,7 @@ let simpleMove (body:string) (logger:ILogger): string option =
               ProposedPosition = msg.Position
               SourcePosition = msg.SourcePosition }
         // sprintf "%A" agentMessage |> logger.LogTrace
+        
         let messageBuilder r = MakeSimpleMove (agentMessage, logger, r)
         let! reply = mainAgent.PostAndReply messageBuilder
         return encode reply

@@ -153,7 +153,7 @@ type GameHub () =
 
 
     member this.SendMessage(message:string, blha:string):Task<string> =
-        System.Console.WriteLine(sprintf "%s, %s" message blha)
+        // System.Console.WriteLine(sprintf "%s, %s" message blha)
         task {
             return message + " and " + blha
         }

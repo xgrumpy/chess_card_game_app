@@ -76,6 +76,7 @@ type CardChooserProps = {
   }
   
   export function CardChooser(props: CardChooserProps) {
+    
     let disabledBg = 'gray'//'#DDBBBB55'
     const ww = 80
     const hh = ww * (1.42)
