@@ -374,7 +374,7 @@ export const VecBoard = ({ state, dispatch }: VecBoardProps) => {
   </svg>
 }
 
-function reducer(state: State, action: any, dispatch: React.Dispatch<any>): State {
+function reducer(state: State, action: any): State {
   switch (action.type) {
     case 'active_users':
       return { ...state, activeUsers: action.users }
@@ -533,7 +533,7 @@ function counterSuitF(s: string) {
 }
 
 function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any> }) {
-
+  
   let dealDisabledOnOffer = (x: string) => {
 
     let offer = state.offer!
@@ -542,21 +542,22 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
       return false
 
     let trumpSuit = suitForLogicalSq(state.destSquare)
-    // let counterSuit = counterSuitF(trumpSuit)
-    // let otherJ = "J" + counterSuit
-    //    let trumpJ = "J" + trumpSuit
+    
+    let counterSuit = counterSuitF(trumpSuit)
+    let otherJ = "J" + counterSuit
+    let trumpJ = "J" + trumpSuit
 
     let offeredSuit = offer.slice(-1)
-
-    let counterSuit = counterSuitF(offeredSuit)
-    let otherJ = "J" + counterSuit
+    
+    // let counterSuit = counterSuitF(offeredSuit)
+    // let otherJ = "J" + counterSuit
 
     if (otherJ === offer) {
       offeredSuit = trumpSuit
     }
 
     let matchingSuitCount = 0
-    //let handHasTrumpJ = false
+    let handHasTrumpJ = false
     let handHasOtherJ = false
 
     for (var i = 0; i < state.hand.length; i++) {
@@ -566,49 +567,51 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
       // if (a.slice(0, 1) == "J") handHasOtherJ = true
 
       if (a == otherJ) handHasOtherJ = true
-      //  if (a == trumpJ) handHasTrumpJ = true
+      if (a == trumpJ) handHasTrumpJ = true
     }
-   
+
     let canFollowSuit = matchingSuitCount > 0
 
-    let canFollowSuitNotCountingLeftBower = () => {
-      if (offeredSuit == counterSuit) {
-        for (var i = 0; i < state.hand.length; i++) {
-          let a = state.hand[i]
-          // if we run into non-bower matching suit, we can follow
-          if (offeredSuit == a.slice(-1) && a !== otherJ) {
-            return true
-          }
-          // if (offeredSuit == a.slice(-1) && a.slice(0, 1) == "J") {
-          //   return true
-          // }
-        }
+    // let canFollowSuitNotCountingLeftBower = () => {
+    //   if (offeredSuit == counterSuit) {
+    //     for (var i = 0; i < state.hand.length; i++) {
+    //       let a = state.hand[i]
+    //       // if we run into non-bower matching suit, we can follow
+    //       if (offeredSuit == a.slice(-1) && a !== otherJ && a !== trumpJ) {
+    //         return true
+    //       }
+    //       // if (offeredSuit == a.slice(-1) && a.slice(0, 1) == "J") {
+    //       //   return true
+    //       // }
+    //     }
 
-        return false
-      } else {
-        return canFollowSuit
-      }
+    //     return false
+    //   } else {
+    //     return canFollowSuit
+    //   }
 
-    }
+    // }
 
     // if (offeredSuit == trumpSuit) {
-      if (canFollowSuit) {
-        return offeredSuit !== x.slice(-1) && x !== otherJ // disable those that aren't the suit  
+      if (canFollowSuit||handHasOtherJ||handHasTrumpJ) {
+        return offeredSuit !== x.slice(-1) && x !== otherJ && x !== trumpJ// disable those that aren't the suit  
       } else {
         if (handHasOtherJ)
           return x !== otherJ
           // return x.slice(0, 1) !== "J"
+        else if(handHasTrumpJ)
+          return x !== trumpJ
         else
           return false // can play anything
       }
     // } else {
     //   if (canFollowSuitNotCountingLeftBower()) {
-    //     return offeredSuit !== x.slice(-1) && x.slice(0, 1) !== "J"// disable those that aren't the suit
+    //     return offeredSuit !== x.slice(-1) && x !== otherJ && x !== trumpJ// disable those that aren't the suit
     //   } else {
     //     return false // can play anything
     //   }
     // }
-    return false
+    // return false
   }
 
   let dealDisabled = (state.offer == null) ? (_: string) => false : dealDisabledOnOffer

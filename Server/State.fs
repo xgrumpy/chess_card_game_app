@@ -452,7 +452,7 @@ let euchreComparator (trumpSuit:CardSuit) (opening:CompositeCard) (response:Comp
 
     let otherJ = cc J (counterSuit trumpSuit)
     let trupRun = [tt J; tt A; tt K; tt Q; tt Ten; tt Nine ]
-    let openingRun = [oo J; oo A; oo K; oo Q; oo Ten; oo Nine ]
+    let openingRun = [oo A; oo K; oo Q; oo J; oo Ten; oo Nine ]
 
     let run = if trumpSuit = opening.Suit then trupRun else trupRun @ openingRun
 
