@@ -560,7 +560,7 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
     for (var i = 0; i < state.hand.length; i++) {
       let a = state.hand[i]
 
-      if (offeredSuit == a.slice(-1) || trumpSuit == a.slice(-1)) ++matchingSuitCount
+      if (offeredSuit == a.slice(-1)) ++matchingSuitCount
       // if (a.slice(0, 1) == "J") handHasOtherJ = true
 
       if (a == otherJ) handHasOtherJ = true
@@ -569,25 +569,25 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
 
     let canFollowSuit = matchingSuitCount > 0
 
-    // let canFollowSuitNotCountingLeftBower = () => {
-    //   if (offeredSuit == counterSuit) {
-    //     for (var i = 0; i < state.hand.length; i++) {
-    //       let a = state.hand[i]
-    //       // if we run into non-bower matching suit, we can follow
-    //       if (offeredSuit == a.slice(-1) || a == otherJ || a == trumpJ) {
-    //         return true
-    //       }
-    //     }
-    //     return false
-    //   } else {
-    //     return canFollowSuit
-    //   }
+    let canFollowSuitNotCountingLeftBower = () => {
+      if (offeredSuit == counterSuit) {
+        for (var i = 0; i < state.hand.length; i++) {
+          let a = state.hand[i]
+          // if we run into non-bower matching suit, we can follow
+          if (offeredSuit == a.slice(-1) || a == otherJ || a == trumpJ) {
+            return true
+          }
+        }
+        return false
+      } else {
+        return canFollowSuit
+      }
+    }
 
-    // }
-
-    // if (offeredSuit == trumpSuit) {
-      if (canFollowSuit||handHasOtherJ||handHasTrumpJ) {
-        return offeredSuit !== x.slice(-1) && trumpSuit !== x.slice(-1) && x !== otherJ && x !== trumpJ// disable those that aren't the suit  
+    if (offeredSuit == trumpSuit) {
+      console.log("111");
+      if (canFollowSuit) {
+        return offeredSuit !== x.slice(-1) && x !== otherJ && x !== trumpJ// disable those that aren't the suit  
       } else {
         if (handHasOtherJ)
           return x !== otherJ
@@ -597,14 +597,19 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
         else
           return false // can play anything
       }
-    // } else {
-    //   if (canFollowSuitNotCountingLeftBower()) {
-    //     return offeredSuit !== x.slice(-1) && x !== otherJ && x !== trumpJ// disable those that aren't the suit
-    //   } else {
-    //     return false // can play anything
-    //   }
-    // }
-    // return false
+    } else {
+      console.log("222");
+      console.log(offeredSuit);
+      console.log(trumpSuit);
+      // console.log(canFollowSuitNotCountingLeftBower());
+      if (canFollowSuitNotCountingLeftBower()) {
+        return offeredSuit !== x.slice(-1) && x !== otherJ && x !== trumpJ// disable those that aren't the suit
+      } else {
+        console.log("44444");
+        return false // can play anything
+      }
+    }
+    return false
   }
 
   let dealDisabled = (state.offer == null) ? (_: string) => false : dealDisabledOnOffer
