@@ -585,7 +585,6 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
     }
 
     if (offeredSuit == trumpSuit) {
-      console.log("111");
       if (canFollowSuit) {
         return offeredSuit !== x.slice(-1) && x !== otherJ && x !== trumpJ// disable those that aren't the suit  
       } else {
@@ -598,14 +597,10 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
           return false // can play anything
       }
     } else {
-      console.log("222");
-      console.log(offeredSuit);
-      console.log(trumpSuit);
       // console.log(canFollowSuitNotCountingLeftBower());
       if (canFollowSuitNotCountingLeftBower()) {
         return offeredSuit !== x.slice(-1) && x !== otherJ && x !== trumpJ// disable those that aren't the suit
       } else {
-        console.log("44444");
         return false // can play anything
       }
     }
