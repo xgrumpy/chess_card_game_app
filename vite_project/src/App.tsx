@@ -541,8 +541,8 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
     if (state.destSquare === null)
       return false
 
-    let trumpSuit = suitForLogicalSq(state.destSquare)
-    
+    // let trumpSuit = suitForLogicalSq(state.destSquare)
+    let trumpSuit = offer.slice(-1)
     let counterSuit = counterSuitF(trumpSuit)
     let otherJ = "J" + counterSuit
     let trumpJ = "J" + trumpSuit

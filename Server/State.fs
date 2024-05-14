@@ -439,9 +439,10 @@ type AgentMsg =
 // returns true if opening card beats response card
 let euchreComparator (trumpSuit:CardSuit) (opening:CompositeCard) (response:CompositeCard) =
     //printfn "Comparing opening: %A to: %A" opening response
-
+    // trumpSuit = opening.Suit
     let cc r s = {CompositeCard.Rank = r; Suit=s}
-    let tt r = cc r trumpSuit
+    // let tt r = cc r trumpSuit
+    let tt r = cc r opening.Suit
     let oo r = cc r opening.Suit
 
     let counterSuit = function
@@ -450,11 +451,14 @@ let euchreComparator (trumpSuit:CardSuit) (opening:CompositeCard) (response:Comp
         | Diams -> Hearts
         | Hearts -> Diams
 
-    let otherJ = cc J (counterSuit trumpSuit)
+    // let otherJ = cc J (counterSuit trumpSuit)
+    let otherJ = cc J (counterSuit opening.Suit)
+
     let trupRun = [tt J; tt A; tt K; tt Q; tt Ten; tt Nine ]
     let openingRun = [oo A; oo K; oo Q; oo J; oo Ten; oo Nine ]
 
-    let run = if trumpSuit = opening.Suit then trupRun else trupRun @ openingRun
+    // let run = if trumpSuit = opening.Suit then trupRun else trupRun @ openingRun
+    let run = if  opening.Suit = opening.Suit then trupRun else trupRun @ openingRun
 
     // remove otherJ from the run 
     let run' = run |> List.collect (fun c -> if c = otherJ then [] else [c] )
@@ -513,6 +517,8 @@ type PieceCode =
 
 let makeMove (sourcePiece:PieceCode, moveData:AgenentMsgData, data:GameStateAndIdentifier):GameState =
     //printfn "Making a move: %A" moveData
+    
+
     let move = moveData.Move
     let state = data.Game
     let { Position = position; Deal = deal; Turn = currentTurn } = state
@@ -521,6 +527,7 @@ let makeMove (sourcePiece:PieceCode, moveData:AgenentMsgData, data:GameStateAndI
 
     // comparator with trump suit
     let trumSuit = move.ParsedDestination |> coordsToSuit
+
     let comparator = euchreComparator trumSuit
 
     let nextDeal c = deal.ByRemovingCard (c, data.UserIsWhite)
@@ -694,6 +701,10 @@ let mainAgentFunc (inbox:MailboxProcessor<AgentMsg>) = async {
 
                 let! src = data.Game.Position |> Map.tryFind moveData.Move.Source
                 let! code = PieceCode.fromString src
+                // System.Console.WriteLine(sprintf "addddddddddddddddddddddddd")
+                // System.Console.WriteLine(sprintf "%A" code)
+                // System.Console.WriteLine(sprintf "%A" moveData)
+                // System.Console.WriteLine(sprintf "%A"  data)
                 let nextState = makeMove (code, moveData, data)
 
                 let! _ = 
