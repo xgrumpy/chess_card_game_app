@@ -85,6 +85,68 @@ let createUser (uid:string, passHash:string,  salt:string, birthday:string, gend
 
     try cmd.ExecuteNonQuery() with _ -> 0
 
+let createInbox (uid:string, name:string,  message:string, reply:string) = 
+    use conn = createAndOpenConnection()
+    let sql = 
+        """
+        INSERT INTO inbox (uid, name, message, reply)
+        VALUES ($uid, $name, $message, $reply) 
+        """
+    let cmd = createCommand conn sql
+    cmd.Parameters.AddWithValue("$uid", uid) |> ignore
+    cmd.Parameters.AddWithValue("$name", name) |> ignore
+    cmd.Parameters.AddWithValue("$message", message) |> ignore
+    cmd.Parameters.AddWithValue("$reply", reply) |> ignore
+    try cmd.ExecuteNonQuery() with _ -> 0
+
+let getInboxs(uid:string) =
+    use conn = createAndOpenConnection ()     
+    let sql = 
+        """
+        SELECT id, uid, name, message, reply 
+        FROM inbox
+        WHERE name = $name  or uid=$name
+        """
+    let cmd = createCommand conn sql
+    cmd.Parameters.AddWithValue("$name", uid) |> ignore
+
+    use reader = cmd.ExecuteReader()
+    let mutable out = []
+    while reader.Read() do
+        try
+            let id = if not (reader.IsDBNull(0)) then reader.GetInt32(0) else 0
+            let uid = if not (reader.IsDBNull(1)) then reader.GetString(1) else ""
+            let name = if not (reader.IsDBNull(2)) then reader.GetString(2) else ""
+            let messages = if not (reader.IsDBNull(3)) then reader.GetString(3) else ""
+            let reply = if not (reader.IsDBNull(4)) then reader.GetString(4) else ""
+            let record = {| Id = id; Uid = uid; Name = name; Message = messages; Reply = reply |}
+            out <- record :: out
+        with
+        | :? System.InvalidCastException as ex ->
+            // Log and handle the specific invalid cast exception
+            printfn "Invalid cast during database read: %s" ex.Message
+            // Optionally log more details here
+        | ex ->
+            // Log and handle any other exception
+            printfn "Unexpected error during database read: %s" ex.Message
+            // Optionally log more details here
+    out
+
+let updateInboxs (id:int32,  message:string) = 
+    use conn = createAndOpenConnection()
+    let sql = 
+        """
+        UPDATE inbox 
+        SET reply = $message
+        WHERE id=$id
+        """
+    let cmd = createCommand conn sql
+
+    cmd.Parameters.AddWithValue("$id", id) |> ignore
+    cmd.Parameters.AddWithValue("$message", message) |> ignore
+
+    try cmd.ExecuteNonQuery() with _ -> 0
+
 let updateUser (uid:string,  birthday:string, gender:string, email:string, currentUid:string) = 
     use conn = createAndOpenConnection()
     let sql = 

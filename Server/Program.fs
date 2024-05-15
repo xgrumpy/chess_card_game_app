@@ -292,13 +292,78 @@ let signUpUser (body:string) (logger:ILogger) =
         logger.LogCritical (e)
         None
 
+type InboxMsg = 
+    { Uid:string; Name:string; Message:string; Reply:string }
+let inbox (body:string) (logger:ILogger) =
+    let body' = Decode.Auto.fromString<InboxMsg>(body,SnakeCase)
+    match body' with
+    | Ok r ->
+        log_activity("inbox",r.Uid,"request","") |> ignore
+        try
+            let success = createInbox(r.Uid, r.Name, r.Message, r.Reply)
+            let out = {| Result = if success > 0 then "new" else "exists" |} 
+            Encode.Auto.toString(out, SnakeCase) |> Some
+        with
+        | :? System.InvalidCastException as ex ->
+            log_activity("inbox", r.Uid, "error", ex.Message) |> ignore
+            logger.LogCritical (ex, "Invalid cast during getInboxs execution.")
+            None
+        | ex ->
+            log_activity("inbox", r.Uid, "error", ex.Message) |> ignore
+            logger.LogCritical (ex, "An unexpected error occurred.")
+            None
+    | Error e ->
+        log_activity("inbox","","error",e) |> ignore 
+        logger.LogCritical (e)
+        None
+
+let getInbox (body:string) (logger:ILogger) =
+    let body' = Decode.Auto.fromString<{| Uid:string |}>(body,SnakeCase)
+    match body' with
+    | Ok r ->
+        log_activity("inbox", r.Uid, "request", "") |> ignore
+        try
+            let success = getInboxs r.Uid
+            Encode.Auto.toString(success, SnakeCase) |> Some
+        with
+        | :? System.InvalidCastException as ex ->
+            log_activity("inbox", r.Uid, "error", ex.Message) |> ignore
+            logger.LogCritical (ex, "Invalid cast during getInboxs execution.")
+            None
+        | ex ->
+            log_activity("inbox", r.Uid, "error", ex.Message) |> ignore
+            logger.LogCritical (ex, "An unexpected error occurred.")
+            None
+    | Error e ->
+        log_activity("getInbox","","error",e) |> ignore 
+        logger.LogCritical (e)
+        None
+
+type updateInboxrMsg = 
+    { Id:int32; Message:string;}
+let updateInbox (body:string) (logger:ILogger) =
+    let body' = Decode.Auto.fromString<updateInboxrMsg>(body,SnakeCase)
+    match body' with
+    | Ok r ->
+        let success = updateInboxs(r.Id,r.Message)
+        // return JSON object
+        let out = {| Result = if success > 0 then "new" else "exists" |} 
+        Encode.Auto.toString(out, SnakeCase) |> Some
+    | Error e ->
+        // Log a detailed error message
+        logger.LogCritical($"Error decoding JSON: {e}")
+        // Log additional information such as the problematic JSON string
+        logger.LogDebug($"JSON string causing the error: {body}")
+        // Continue with the existing error handling logic
+        log_activity("updateUser", "", "error", e) |> ignore
+        None
+
 type updateUserMsg = 
     { Uid:string; Birthday:string; Gender:string; Email:string; current_uid:string }
 let updateUser (body:string) (logger:ILogger) =
     let body' = Decode.Auto.fromString<updateUserMsg>(body,SnakeCase)
     match body' with
     | Ok r ->
-        
         let success = updateUser(r.Uid,r.Birthday,r.Gender,r.Email,r.current_uid)
         // return JSON object
         let out = {| Result = if success > 0 then "new" else "exists" |} 
@@ -428,6 +493,9 @@ let webApp =
                 route "/signup" >=> (handlerWrapper signUpUser "new")
                 route "/updateUser" >=> (handlerWrapper updateUser "new")
                 route "/signin" >=> (handlerWrapper signInUser "new")
+                route "/inbox" >=> (handlerWrapper inbox "new")
+                route "/getInbox" >=> (handlerWrapper getInbox "new")
+                route "/updateInbox" >=> (handlerWrapper updateInbox "new")
                 route "/sendEmail" >=> (handlerWrapper sendEmail "new")
                 routef "/move2/%s" (handlerWrapper2 simpleMove2 "move")
                 route "/new" >=> (handlerWrapper makeNewGame "new")
