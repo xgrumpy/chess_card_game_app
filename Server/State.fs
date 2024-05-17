@@ -441,8 +441,8 @@ let euchreComparator (trumpSuit:CardSuit) (opening:CompositeCard) (response:Comp
     //printfn "Comparing opening: %A to: %A" opening response
     // trumpSuit = opening.Suit
     let cc r s = {CompositeCard.Rank = r; Suit=s}
-    // let tt r = cc r trumpSuit
-    let tt r = cc r opening.Suit
+    let tt r = cc r trumpSuit
+    // let tt r = cc r opening.Suit
     let oo r = cc r opening.Suit
 
     let counterSuit = function
@@ -452,13 +452,13 @@ let euchreComparator (trumpSuit:CardSuit) (opening:CompositeCard) (response:Comp
         | Hearts -> Diams
 
     // let otherJ = cc J (counterSuit trumpSuit)
-    let otherJ = cc J (counterSuit opening.Suit)
+    let otherJ = cc J (counterSuit trumpSuit)
 
     let trupRun = [tt J; tt A; tt K; tt Q; tt Ten; tt Nine ]
     let openingRun = [oo A; oo K; oo Q; oo J; oo Ten; oo Nine ]
 
     // let run = if trumpSuit = opening.Suit then trupRun else trupRun @ openingRun
-    let run = if  opening.Suit = opening.Suit then trupRun else trupRun @ openingRun
+    let run = if  trumpSuit = opening.Suit then trupRun else trupRun @ openingRun
 
     // remove otherJ from the run 
     let run' = run |> List.collect (fun c -> if c = otherJ then [] else [c] )

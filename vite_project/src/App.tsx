@@ -541,8 +541,8 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
     if (state.destSquare === null)
       return false
 
-    // let trumpSuit = suitForLogicalSq(state.destSquare)
-    let trumpSuit = offer.slice(-1)
+    let trumpSuit = suitForLogicalSq(state.destSquare)
+    // let trumpSuit = offer.slice(-1)
     let counterSuit = counterSuitF(trumpSuit)
     let otherJ = "J" + counterSuit
     let trumpJ = "J" + trumpSuit
@@ -585,7 +585,7 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
     }
 
     if (offeredSuit == trumpSuit) {
-      if (canFollowSuit || handHasOtherJ) {
+      if (canFollowSuit) {
         return offeredSuit !== x.slice(-1) && x !== otherJ && x !== trumpJ// disable those that aren't the suit  
       } else {
         if (handHasOtherJ)
