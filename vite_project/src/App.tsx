@@ -560,7 +560,7 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
     for (var i = 0; i < state.hand.length; i++) {
       let a = state.hand[i]
 
-      if (offeredSuit == a.slice(-1) ) ++matchingSuitCount
+      if (offeredSuit == a.slice(-1) && a !== otherJ && a !== trumpJ ) ++matchingSuitCount
       // if (a.slice(0, 1) == "J") handHasOtherJ = true
 
       if (a == otherJ) handHasOtherJ = true
@@ -574,7 +574,7 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
         for (var i = 0; i < state.hand.length; i++) {
           let a = state.hand[i]
           // if we run into non-bower matching suit, we can follow
-          if (offeredSuit == a.slice(-1)) {
+          if (offeredSuit == a.slice(-1) && a !== otherJ && a !== trumpJ) {
             return true
           }
         }
@@ -588,9 +588,9 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
       if (canFollowSuit) {
         return offeredSuit !== x.slice(-1) && x !== otherJ && x !== trumpJ// disable those that aren't the suit  
       } else {
-        if (handHasOtherJ)
-          return x !== otherJ
-        else
+        // if (handHasOtherJ)
+        //   return x !== otherJ
+        // else
           return false // can play anything
       }
     } else {
