@@ -574,7 +574,7 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
         for (var i = 0; i < state.hand.length; i++) {
           let a = state.hand[i]
           // if we run into non-bower matching suit, we can follow
-          if (offeredSuit == a.slice(-1) || a == otherJ || a == trumpJ) {
+          if (offeredSuit == a.slice(-1)) {
             return true
           }
         }
