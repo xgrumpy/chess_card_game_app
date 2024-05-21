@@ -359,10 +359,9 @@ export const VecBoard = ({ state, dispatch }: VecBoardProps) => {
 
   const handler = (e: React.MouseEvent<SVGElement, MouseEvent>) => {
     let xx = e.target as HTMLElement
-    console.log(e.clientX, e.clientY, " - ", e.nativeEvent.offsetX, e.nativeEvent.offsetY, ", ", xx.id)
-    console.log(e)
+    // console.log(e.clientX, e.clientY, " - ", e.nativeEvent.offsetX, e.nativeEvent.offsetY, ", ", xx.id)
+    // console.log(e)
 
-    console.log()
   }
 
   return <svg width={w} height={w} onClick={handler}>
@@ -555,15 +554,15 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
 
     let matchingSuitCount = 0
     // let handHasTrumpJ = false
-    let handHasOtherJ = false
+    // let handHasOtherJ = false
 
     for (var i = 0; i < state.hand.length; i++) {
       let a = state.hand[i]
 
-      if (offeredSuit == a.slice(-1) && a !== otherJ && a !== trumpJ ) ++matchingSuitCount
+      if (offeredSuit == a.slice(-1)) ++matchingSuitCount
       // if (a.slice(0, 1) == "J") handHasOtherJ = true
 
-      if (a == otherJ) handHasOtherJ = true
+      // if (a == otherJ) handHasOtherJ = true
       // if (a == trumpJ) handHasTrumpJ = true
     }
 
@@ -574,7 +573,7 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
         for (var i = 0; i < state.hand.length; i++) {
           let a = state.hand[i]
           // if we run into non-bower matching suit, we can follow
-          if (offeredSuit == a.slice(-1) && a !== otherJ && a !== trumpJ) {
+          if (offeredSuit == a.slice(-1)) {
             return true
           }
         }
@@ -588,9 +587,9 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
       if (canFollowSuit) {
         return offeredSuit !== x.slice(-1) && x !== otherJ && x !== trumpJ// disable those that aren't the suit  
       } else {
-        // if (handHasOtherJ)
-        //   return x !== otherJ
-        // else
+          // if (handHasOtherJ)
+          //   return x !== otherJ
+          // else
           return false // can play anything
       }
     } else {
