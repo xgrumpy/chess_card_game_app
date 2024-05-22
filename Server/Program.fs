@@ -366,7 +366,7 @@ let updateUser (body:string) (logger:ILogger) =
     | Ok r ->
         let success = updateUser(r.Uid,r.Birthday,r.Gender,r.Email,r.current_uid)
         // return JSON object
-        let out = {| Result = if success > 0 then "new" else "exists" |} 
+        let out = {| Result = if success > 0 then "success" else "fail" |} 
         Encode.Auto.toString(out, SnakeCase) |> Some
     | Error e ->
         // Log a detailed error message
