@@ -359,7 +359,7 @@ export const VecBoard = ({ state, dispatch }: VecBoardProps) => {
 
   const handler = (e: React.MouseEvent<SVGElement, MouseEvent>) => {
     let xx = e.target as HTMLElement
-    // console.log(e.clientX, e.clientY, " - ", e.nativeEvent.offsetX, e.nativeEvent.offsetY, ", ", xx.id)
+    console.log(e.clientX, e.clientY, " - ", e.nativeEvent.offsetX, e.nativeEvent.offsetY, ", ", xx.id)
     // console.log(e)
 
   }
@@ -595,7 +595,7 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
     } else {
       // console.log(canFollowSuitNotCountingLeftBower());
       if (canFollowSuitNotCountingLeftBower()) {
-        return offeredSuit !== x.slice(-1) && x !== otherJ && x !== trumpJ// disable those that aren't the suit
+        return offeredSuit !== x.slice(-1)// disable those that aren't the suit && x !== otherJ && x !== trumpJ
       } else {
         return false // can play anything
       }
