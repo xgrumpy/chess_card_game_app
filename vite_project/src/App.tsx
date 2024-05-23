@@ -554,7 +554,7 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
 
     let matchingSuitCount = 0
     // let handHasTrumpJ = false
-    // let handHasOtherJ = false
+    let handHasOtherJ = false
 
     for (var i = 0; i < state.hand.length; i++) {
       let a = state.hand[i]
@@ -562,7 +562,7 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
       if (offeredSuit == a.slice(-1)) ++matchingSuitCount
       // if (a.slice(0, 1) == "J") handHasOtherJ = true
 
-      // if (a == otherJ) handHasOtherJ = true
+      if (a == otherJ) handHasOtherJ = true
       // if (a == trumpJ) handHasTrumpJ = true
     }
 
@@ -584,7 +584,7 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
     }
 
     if (offeredSuit == trumpSuit) {
-      if (canFollowSuit) {
+      if (canFollowSuit || handHasOtherJ) {
         return offeredSuit !== x.slice(-1) && x !== otherJ && x !== trumpJ// disable those that aren't the suit  
       } else {
           // if (handHasOtherJ)
