@@ -116,9 +116,9 @@ type GameHub () =
             x.Clients.Clients(cid).AuthStatus "LoginOk" |> ignore
     }
 
-    member x.ProposeGame () = 
+    member x.ProposeGame method  = 
         whenAuthenticated (x) <| fun uid -> task {
-            lobbyAgent.Post <| Lobby.LobbyMessage.Add (UserOfToken uid)
+            lobbyAgent.Post <| Lobby.LobbyMessage.Add (UserOfToken uid, method)
         }
 
     member x.ResignCurrentGame() = 

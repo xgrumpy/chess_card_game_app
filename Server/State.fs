@@ -777,9 +777,9 @@ let mainAgentFunc (inbox:MailboxProcessor<AgentMsg>) = async {
 let mainAgent = mainAgentFunc |> MailboxProcessor.Start 
 
 module Lobby =
-    type LobbyDatum = {User:string;Rating:int;Timestamp:int64}
+    type LobbyDatum = {User:string;Rating:int;Method:string;Timestamp:int64}
     type LobbyMessage = 
-        | Add of User
+        | Add of User * Method:string
         | Remove of User 
         | GetRecent of limit:int * Chnl<LobbyDatum list> 
         | RemoveExpired
@@ -812,7 +812,7 @@ module Lobby =
         let now() = System.DateTimeOffset.Now.ToUnixTimeSeconds()
         let regIndex = RegistrationOrderIndex()
 
-        let mutable lobby = Map.empty<User, {|Rating:int; Timestamp:int64|}>
+        let mutable lobby = Map.empty<User, {|Rating:int; Method:string; Timestamp:int64|}>
 
         let deregisterUser u = 
             lobby <- lobby |> Map.remove u
@@ -820,12 +820,12 @@ module Lobby =
 
         while true do 
             match! inbox.Receive() with
-            | Add (u) ->
+            | Add (u, method) ->
                 let (UserOfToken uid) = u
                 match userById(uid:string) with 
                 | [] -> ()
                 | head::_ ->
-                    let datum = {|Rating = head.Rating; Timestamp = now() |} 
+                    let datum = {|Rating = head.Rating;Method = method; Timestamp = now() |} 
                     lobby <- lobby |> Map.add u datum
                     regIndex.Register u
             | Remove u ->
@@ -837,7 +837,7 @@ module Lobby =
                     let (UserOfToken u) = user
                     if datum.IsSome then
                         let datum = Option.get datum
-                        yield {LobbyDatum.User=u;Rating=datum.Rating;Timestamp=tm - datum.Timestamp}
+                        yield {LobbyDatum.User=u;Rating=datum.Rating; Method = datum.Method;Timestamp=tm - datum.Timestamp}
                 ] |> cnl.Reply
             | RemoveExpired -> 
                 // this will be called every some interval...
