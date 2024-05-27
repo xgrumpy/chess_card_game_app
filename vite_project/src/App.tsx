@@ -93,7 +93,7 @@ export interface State {
   boardFlipped: boolean
   boardDisabled: boolean
   offer: string | null // offered card
-  login: { user_is_white: boolean, uid: string, opponent: string } | null
+  login: { user_is_white: boolean, uid: string, opponent: string , method: string} | null
   turn: 'white' | 'black'
   hand: string[]
   white_can_castle: boolean
@@ -388,7 +388,7 @@ function reducer(state: State, action: any): State {
     case 'update_suite':
       return { ...state, suit: action.suit }
     case 'login':
-      return { ...state, boardFlipped: !action.user_is_white, login: { user_is_white: action.user_is_white, uid: action.token, opponent: action.opponent } }
+      return { ...state, boardFlipped: !action.user_is_white, login: { user_is_white: action.user_is_white, uid: action.token, opponent: action.opponent, method: action.method } }
     case 'register_user':
       return { ...state, userInfo: { session: action.session, uid: action.uid } }
     case 'clear_marked':

@@ -293,6 +293,7 @@ export function Lobby({ toggleTheme = () => {} , state, dispatch }: ArenaProps) 
         throw new Error('Network response was not ok')
 
       let json = await response.json()
+      
       if (json != null) {
         let isWhite = json.user_is_white as boolean
         let opponent = isWhite ? json.game.pairing.black : json.game.pairing.white
@@ -346,7 +347,6 @@ export function Lobby({ toggleTheme = () => {} , state, dispatch }: ArenaProps) 
   function callback(key: string): void {
     console.log(key);
   }
-  console.log(myData)
   return (
     <>
       {/* {contextHolder} */}
@@ -357,6 +357,7 @@ export function Lobby({ toggleTheme = () => {} , state, dispatch }: ArenaProps) 
             <Table dataSource={myData} pagination={{ pageSize: 50 }} scroll={{ y: 240 }} size="middle">
               <Column title="User" dataIndex="user" key="user" />
               <Column title="Rating" dataIndex="rating" key="rating" />
+              <Column title="Method" dataIndex="method" key="method" />
               <Column
                 title="Action"
                 key="action"
@@ -372,7 +373,8 @@ export function Lobby({ toggleTheme = () => {} , state, dispatch }: ArenaProps) 
               />
             </Table>
             <br />
-            <Button onClick={() => { connectionR?.invoke('ProposeGame') }}> Propose </Button>
+            <Button onClick={() => { connectionR?.invoke('ProposeGame', '5minute') }}> 5-minute </Button> &nbsp;&nbsp;
+            <Button onClick={() => { connectionR?.invoke('ProposeGame', 'unlimited') }}> unlimited </Button>
           </TabPane>
           <TabPane tab="Inbox" key="inboxs">
             <MessageBoard />
