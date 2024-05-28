@@ -140,10 +140,12 @@ type User = UserOfToken of string with
         ToJsonDefaults.ToJson uu
 
 
-type Pairing = {White:User; Black:User} with
+type Pairing = {White:User; Black:User; BTime:int; WTime:int} with
     static member ToJson(p:Pairing) = json {
         do! Json.write "white" p.White
         do! Json.write "black" p.Black
+        do! Json.write "btime" p.BTime
+        do! Json.write "wtime" p.WTime
     }
 
 type CardDistribution = {
@@ -353,7 +355,7 @@ type GamesArchive() =
             // remove all completed games between the two users
             let partitionIntoKeepAndKill = Set.partition (
                 fun s ->
-                    let g = games[s] in g.Pairing <> p && g.Pairing <> { White = p.Black; Black = p.White})
+                    let g = games[s] in g.Pairing <> p && g.Pairing <> { White = p.Black; Black = p.White; BTime = p.BTime; WTime = p.WTime})
 
 
             let (keepW,killW) = partitionIntoKeepAndKill white
@@ -406,10 +408,7 @@ let squeezeFenEmptySquares (fen: string) =
         .Replace("111", "3")
         .Replace("11", "2")
 
-
-
-
-    
+   
 
 type AgenentMsgData = {
     User:User
@@ -429,7 +428,7 @@ type AgenentMsgData = {
 
 
 type AgentMsg = 
-    | CreateGame of white:string * black:string * Chnl<Option<string * Pairing>> 
+    | CreateGame of white:string * black:string * Chnl<Option<string * Pairing>>  * BTime:int * WTime:int
     | MakeSimpleMove of AgenentMsgData * ILogger * Chnl<Option<GameStateAndIdentifier>>
     | GetState of User * Chnl<Option<GameStateAndIdentifier>>
     | Resign of User * Option<TurnColor>
@@ -511,8 +510,6 @@ type PieceCode =
         | Knight c -> c.ToPieceColor() + "N"
         | Rook c -> c.ToPieceColor() + "R"
         | Pawn c -> c.ToPieceColor() + "P"
-
-
 
 
 let makeMove (sourcePiece:PieceCode, moveData:AgenentMsgData, data:GameStateAndIdentifier):GameState =
@@ -655,8 +652,6 @@ let makeMove (sourcePiece:PieceCode, moveData:AgenentMsgData, data:GameStateAndI
         EnpassantSquare = ep } 
 
     
-
-
 let mainAgentFunc (inbox:MailboxProcessor<AgentMsg>) = async {
     let archive = GamesArchive()
 
@@ -673,8 +668,8 @@ let mainAgentFunc (inbox:MailboxProcessor<AgentMsg>) = async {
 
     while true do 
         match! inbox.Receive() with
-        | CreateGame (w, b, chnl) ->
-            let p = {White = UserOfToken w; Black = UserOfToken b}  
+        | CreateGame (w, b, chnl, btime, wtime) ->
+            let p = {White = UserOfToken w; Black = UserOfToken b; BTime = btime; WTime = wtime}  
             lobbyAgent.Post (Lobby.LobbyMessage.Remove p.White)
             lobbyAgent.Post (Lobby.LobbyMessage.Remove p.Black)
 
@@ -768,7 +763,6 @@ let mainAgentFunc (inbox:MailboxProcessor<AgentMsg>) = async {
                                 printfn "Nothing";
                         | Undefined -> raise (System.Diagnostics.UnreachableException())
             | None -> ()
-            
             
         | GetState (usr, chnl) ->
             dataForUser usr |> chnl.Reply

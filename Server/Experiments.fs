@@ -67,7 +67,9 @@ let options =
 let experiments_main argv =
     let p:Pairing = 
         { White = UserOfToken "hello"
-          Black = UserOfToken "something" }
+          Black = UserOfToken "something" 
+          BTime = 9999
+          WTime = 9999 }
 
     let g = freshGame(p)
     let s = (Json.serialize >> Json.format) g

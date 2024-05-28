@@ -93,7 +93,7 @@ export interface State {
   boardFlipped: boolean
   boardDisabled: boolean
   offer: string | null // offered card
-  login: { user_is_white: boolean, uid: string, opponent: string , method: string} | null
+  login: { user_is_white: boolean, uid: string, opponent: string, btime: number, wtime: number } | null
   turn: 'white' | 'black'
   hand: string[]
   white_can_castle: boolean
@@ -388,7 +388,7 @@ function reducer(state: State, action: any): State {
     case 'update_suite':
       return { ...state, suit: action.suit }
     case 'login':
-      return { ...state, boardFlipped: !action.user_is_white, login: { user_is_white: action.user_is_white, uid: action.token, opponent: action.opponent, method: action.method } }
+      return { ...state, boardFlipped: !action.user_is_white, login: { user_is_white: action.user_is_white, uid: action.token, opponent: action.opponent, btime: action.btime, wtime: action.wtime } }
     case 'register_user':
       return { ...state, userInfo: { session: action.session, uid: action.uid } }
     case 'clear_marked':
@@ -532,7 +532,7 @@ function counterSuitF(s: string) {
 }
 
 function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any> }) {
-  
+
   let dealDisabledOnOffer = (x: string) => {
 
     let offer = state.offer!
@@ -587,10 +587,10 @@ function Deal({ state, dispatch }: { state: State, dispatch: React.Dispatch<any>
       if (canFollowSuit || handHasOtherJ) {
         return offeredSuit !== x.slice(-1) && x !== otherJ && x !== trumpJ// disable those that aren't the suit  
       } else {
-          // if (handHasOtherJ)
-          //   return x !== otherJ
-          // else
-          return false // can play anything
+        // if (handHasOtherJ)
+        //   return x !== otherJ
+        // else
+        return false // can play anything
       }
     } else {
       // console.log(canFollowSuitNotCountingLeftBower());
@@ -811,6 +811,9 @@ let unableToMakeMoves = (state: State) => {
 
 function MainPage({ state, dispatch }: VecBoardProps) {
   const navigate = useNavigate()
+  let myUid = state.userInfo?.uid
+  const [btime, setBTime] = useState(9999);
+  const [wtime, setWTime] = useState(9999);
   // this effect will be mounted unmounted twice in dev by design
   useEffect(() => {
     console.log('Mounting game page')
@@ -831,7 +834,31 @@ function MainPage({ state, dispatch }: VecBoardProps) {
     }
 
   }, [])
-  // console.log(state)
+  if (connectionR) {
+    connectionR.invoke("SendPairing").then(result => {
+      try {
+        let json = JSON.parse(result);
+        setBTime(json.game.pairing.btime);
+        setWTime(json.game.pairing.wtime);
+      } catch (err) {
+        console.error("Failed to parse JSON: ", err);
+      }
+    }).catch(err => {
+      console.error("Error invoking SendPairing: ", err.toString());
+    });
+  }
+  
+  useEffect(() => {
+    const onTimeout = () => {
+      if(connectionR)
+        connectionR?.invoke("UpdatePairing", myUid, btime-1, wtime)
+    }
+    const intervalId = setInterval(onTimeout, 1000);
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [state.turn])
+
   if (!state.login)
     return (<><Typography.Text>No Game</Typography.Text></>)
 
@@ -910,8 +937,8 @@ function MainPage({ state, dispatch }: VecBoardProps) {
   const isWhite = state.login.user_is_white
   const login = state.login
   const data = [
-    ['WHITE: ', isWhite ? login.uid : login.opponent],
-    ['BLACK: ', isWhite ? login.opponent : login.uid]
+    ['WHITE: ', isWhite ? login.uid : login.opponent, wtime],
+    ['BLACK: ', isWhite ? login.opponent : login.uid, btime]
   ]
 
   return (
@@ -943,6 +970,9 @@ function MainPage({ state, dispatch }: VecBoardProps) {
                   {item[0]}
                 </Typography.Text>
                 <Typography.Text strong={login.uid == item[1]}>{item[1]}</Typography.Text>
+                <Typography.Text >
+                  {item[2]}
+                </Typography.Text>
               </List.Item>
             )}
           />

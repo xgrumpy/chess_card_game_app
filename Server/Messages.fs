@@ -60,12 +60,15 @@ type MoveMsg = {
 type CrtGameMsg = {
     WhiteToken:string
     BlackToken:string
+    BTime:int
+    WTime:int
 } with
     static member FromJson (_ :CrtGameMsg) = json {
         let! w = Json.read "white_token"
         let! b = Json.read "black_token"
-
-        return { CrtGameMsg.WhiteToken = w; BlackToken = b}
+        let! bt = Json.read "BTime"
+        let! wt = Json.read "WTime"
+        return { CrtGameMsg.WhiteToken = w; BlackToken = b; BTime  = bt; WTime =wt}
     }
 
 type SwapMsg = {

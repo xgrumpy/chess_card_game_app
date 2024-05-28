@@ -291,13 +291,11 @@ export function Lobby({ toggleTheme = () => {} , state, dispatch }: ArenaProps) 
       const response = await fetch(`${httpScheme}://${host}/subscribe/${session}/${uid}`)
       if (!response.ok)
         throw new Error('Network response was not ok')
-
       let json = await response.json()
-      
       if (json != null) {
         let isWhite = json.user_is_white as boolean
         let opponent = isWhite ? json.game.pairing.black : json.game.pairing.white
-        dispatch({ type: 'login', user_is_white: isWhite, token: uid, opponent })
+        dispatch({ type: 'login', user_is_white: isWhite, token: uid, opponent, btime:json.game.pairing.btime, wtime:json.game.pairing.wtime })
         navigate("/main")
       }
       return json
@@ -340,8 +338,13 @@ export function Lobby({ toggleTheme = () => {} , state, dispatch }: ArenaProps) 
 
   let myData = state.lobby.filter((v) => v.uid !== myUid).map((v, index) => { v.key = `${index}`; return v })
 
-  let acceptProposal = (uid: string) => {
-    connectionR?.invoke("AcceptGameProposal", uid)
+  let acceptProposal = (uid: string, method:string) => {
+    if(method == "5minute"){
+      connectionR?.invoke("AcceptGameProposal", uid, 300, 300)
+    }else{
+      connectionR?.invoke("AcceptGameProposal", uid, 9999,9999)
+    }
+    
   }
 
   function callback(key: string): void {
@@ -365,7 +368,7 @@ export function Lobby({ toggleTheme = () => {} , state, dispatch }: ArenaProps) 
                   <Space size="middle">
                     {/* <Button onClick={() => doChallenge(record.uid)} loading={true}>Challenge</Button> */}
                     <Button onClick={() =>
-                      acceptProposal(record.user)
+                      acceptProposal(record.user, record.method)
                     }>Accept {record.user}</Button>
                     {/* <a>Delete</a> */}
                   </Space>

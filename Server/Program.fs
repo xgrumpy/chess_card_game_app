@@ -1,5 +1,6 @@
 open System
 open System.IO
+open System.Text.Json
 open Microsoft
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Cors.Infrastructure
@@ -67,6 +68,15 @@ type GameHub () =
             return ()
     }
 
+    let whenAuthenticatedString (hub: GameHub) (run: string -> Task<string>): Task<string> = task {
+        let cid = hub.Context.ConnectionId
+        match connections.TryGetValue(cid) with 
+        | None ->  
+            return ""
+        | Some (UserOfToken uid) -> 
+            return! run(uid)
+    }
+
     override _.OnConnectedAsync():Task = 
         Console.WriteLine("Connecting...")
         Task.CompletedTask
@@ -104,7 +114,6 @@ type GameHub () =
         whenAuthenticated (x) <| fun _ ->
             x.Groups.RemoveFromGroupAsync(x.Context.ConnectionId,groupNameForLobbyFeed)
     
-
     member x.Login(session:string) = task {
         let cid = x.Context.ConnectionId
         match sessionById session with
@@ -138,13 +147,13 @@ type GameHub () =
             x.Clients.Group(groupNameForUser uidToChallenge).RespondToChallenge(senderUid) |> ignore            
         }
 
-    member x.AcceptGameProposal(player:string option) =
+    member x.AcceptGameProposal(player:string option, btime:int, wtime:int) =
         whenAuthenticated (x) <| fun senderUid -> task {
             let player = Option.get player
             let now = int(DateTimeOffset.Now.ToUnixTimeSeconds())
             let (u,v) = if now % 2 = 0 then (senderUid,player) else (player, senderUid)
 
-            let messageBuilder r = CreateGame (u, v, r)
+            let messageBuilder r = CreateGame (u, v, r, btime, wtime)
             let reply = mainAgent.PostAndReply messageBuilder
 
             match reply with
@@ -155,6 +164,33 @@ type GameHub () =
         }
 
 
+    member x.SendPairing(): Task<string> = 
+        whenAuthenticatedString (x) <| fun uid -> task {
+            let messageBuilder ch = GetState (UserOfToken uid, ch )            
+            let reply = mainAgent.PostAndReply (messageBuilder)
+            let res =
+                match reply with
+                | Some sid -> (Json.serialize >> Json.format) sid
+                | None -> Json.Null() |> Json.format         
+            return res
+        }
+
+    member x.UpdatePairing(player:string option, btime:int, wtime:int) = 
+        whenAuthenticated (x) <| fun senderUid -> task {
+            let player = Option.get player
+            let now = int(DateTimeOffset.Now.ToUnixTimeSeconds())
+            let (u,v) = if now % 2 = 0 then (senderUid,player) else (player, senderUid)
+
+            let messageBuilder r = CreateGame (u, v, r, btime, wtime)
+            let reply = mainAgent.PostAndReply messageBuilder
+
+            match reply with
+            | Some (gid, _ ) ->
+                x.Clients.Group(groupNameForUser player).GoToGame(gid) |> ignore
+                x.Clients.Group(groupNameForUser senderUid).GoToGame(gid) |> ignore
+            | None -> ()
+        }
+
     member this.SendMessage(message:string, blha:string):Task<string> =
         // System.Console.WriteLine(sprintf "%s, %s" message blha)
         task {
@@ -162,6 +198,7 @@ type GameHub () =
         }
         //Task.CompletedTask
 
+    
     // member this.SendToClient (message: string) =
     //     let connectionId = this.Context.ConnectionId
     //     System.Console.WriteLine(sprintf "%s -> %s" connectionId message)
@@ -268,7 +305,7 @@ let runSwap body logger =
 let makeNewGame (body:string) (logger:ILogger) =
     let msg:CrtGameMsg = decode body
     option {
-        let messageBuilder r = CreateGame (msg.WhiteToken, msg.BlackToken,r)
+        let messageBuilder r = CreateGame (msg.WhiteToken, msg.BlackToken, r, msg.BTime, msg.WTime)
         let! reply =  mainAgent.PostAndReply messageBuilder
         return encode reply
     }

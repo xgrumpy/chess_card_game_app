@@ -201,7 +201,7 @@ export function Signin(props: VecBoardProps) {
           let isWhite = obj.game_state.user_is_white as boolean
           let pairing = obj.game_state.game.pairing
           let opponent = isWhite ? pairing.black[1] : pairing.white[1]
-          dispatch({ type: 'login', user_is_white: obj.game_state.user_is_white, token: payload.uid, opponent: opponent })
+          dispatch({ type: 'login', user_is_white: obj.game_state.user_is_white, token: payload.uid, opponent: opponent, btime: obj.game_state.game.pairing.btime, w_time: obj.game_state.game.pairing.w_time })
           navigate("/main")
         }
       }
@@ -264,14 +264,13 @@ export function Signin(props: VecBoardProps) {
         await connectionR.invoke("Login", session)
         console.log('SignalR authenticated')
         dispatch({ type: 'register_user', uid: payload.uid, session })
-
         if (obj.game_state == undefined) {
           navigate("/lobby")
         } else {
           let isWhite = obj.game_state.user_is_white as boolean
           let pairing = obj.game_state.game.pairing
           let opponent = isWhite ? pairing.black[1] : pairing.white[1]
-          dispatch({ type: 'login', user_is_white: obj.game_state.user_is_white, token: payload.uid, opponent: opponent })
+          dispatch({ type: 'login', user_is_white: obj.game_state.user_is_white, token: payload.uid, opponent: opponent, btime:obj.game_state.game.pairing.b_time, wtime:obj.game_state.game.pairing.w_time })
           navigate("/main")
         }
       }
