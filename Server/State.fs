@@ -4,6 +4,7 @@ open FsToolkit.ErrorHandling
 open Messages
 open Microsoft.Extensions.Logging
 open Db
+open System
 
 type CardsRank = A | K | Q | J | Ten | Nine with 
     override x.ToString() = 
@@ -140,7 +141,10 @@ type User = UserOfToken of string with
         ToJsonDefaults.ToJson uu
 
 
-type Pairing = {White:User; Black:User; BTime:int; WTime:int} with
+type Pairing = {White:User; Black:User; mutable  BTime:int; mutable  WTime:int} with
+    member this.UpdateTime(bTime: int, wTime: int) =
+        { this with BTime = bTime; WTime = wTime }
+
     static member ToJson(p:Pairing) = json {
         do! Json.write "white" p.White
         do! Json.write "black" p.Black
@@ -330,6 +334,8 @@ let freshGame (p:Pairing) =
         DefendingCard = None
     }
 
+let userToString (UserOfToken token) = token
+
 type GamesArchive() =
     let mutable games = Map.empty<string, GameState> 
     let mutable gamesByUser = Map.empty<User, Set<string>>
@@ -377,6 +383,26 @@ type GamesArchive() =
         else 
             None
 
+    member _.TryUpdatePairing(p:Pairing) =
+        let whiteGamesSet = userGames p.White // Assuming this returns a set of game IDs
+        let whiteGamesList = Set.toList whiteGamesSet // Convert set to list
+        let gameId =
+            match whiteGamesList with
+            | [id] -> id // Extract the ID if the list contains exactly one element
+            | _ -> failwith "Unexpected number of games found for the specified user"
+        Console.WriteLine(gameId)
+        match games |> Map.tryFind gameId with
+        | Some gameState ->
+            let updatedPairing = gameState.Pairing.UpdateTime(p.BTime, p.WTime)
+            let updatedGameState = { gameState with Pairing = updatedPairing }
+            // Add the updated game state back into the map
+            let updatedGames = games |> Map.add gameId updatedGameState
+            // Return the updated map and true to indicate success
+            true
+        | None ->
+            false
+
+
     member _.CurrentOrFinishedGameForUser(user:User) = 
         let ug = userGamesWithData user
         let ongoing, completed = ug |> Set.partition (fun (id, game) -> game.Result = Undefined) 
@@ -392,8 +418,7 @@ type GamesArchive() =
             let res = upFunc g
             games <- games |> Map.add id res
             return res
-        }
-
+        } 
 
 type Chnl<'T> = AsyncReplyChannel<'T>
 
@@ -433,6 +458,7 @@ type AgentMsg =
     | GetState of User * Chnl<Option<GameStateAndIdentifier>>
     | Resign of User * Option<TurnColor>
     | SwapCard of User * CompositeCard * Chnl<Option<GameStateAndIdentifier>> 
+    | UpdatePairingData of white:string * black:string * BTime:int * WTime:int
 
 // given an opening card, a response card, and a trump suit 
 // returns true if opening card beats response card
@@ -675,6 +701,10 @@ let mainAgentFunc (inbox:MailboxProcessor<AgentMsg>) = async {
 
             archive.TryAddPairing p
                 |> Option.map (fun gid -> gid, p) |> chnl.Reply
+
+        | UpdatePairingData (w, b, btime, wtime) ->
+            let p = {White = UserOfToken w; Black = UserOfToken b; BTime = btime; WTime = wtime}  
+            archive.TryUpdatePairing p |> ignore
 
         | SwapCard (user, card, chnl) ->
             option {

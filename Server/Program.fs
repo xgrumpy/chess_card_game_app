@@ -152,7 +152,6 @@ type GameHub () =
             let player = Option.get player
             let now = int(DateTimeOffset.Now.ToUnixTimeSeconds())
             let (u,v) = if now % 2 = 0 then (senderUid,player) else (player, senderUid)
-
             let messageBuilder r = CreateGame (u, v, r, btime, wtime)
             let reply = mainAgent.PostAndReply messageBuilder
 
@@ -162,7 +161,6 @@ type GameHub () =
                 x.Clients.Group(groupNameForUser senderUid).GoToGame(gid) |> ignore
             | None -> ()
         }
-
 
     member x.SendPairing(): Task<string> = 
         whenAuthenticatedString (x) <| fun uid -> task {
@@ -176,19 +174,14 @@ type GameHub () =
         }
 
     member x.UpdatePairing(player:string option, btime:int, wtime:int) = 
+        Console.WriteLine("ddddddddddddddd");
         whenAuthenticated (x) <| fun senderUid -> task {
             let player = Option.get player
             let now = int(DateTimeOffset.Now.ToUnixTimeSeconds())
             let (u,v) = if now % 2 = 0 then (senderUid,player) else (player, senderUid)
-
-            let messageBuilder r = CreateGame (u, v, r, btime, wtime)
+            let messageBuilder r = UpdatePairingData (u, v, btime, wtime)
             let reply = mainAgent.PostAndReply messageBuilder
-
-            match reply with
-            | Some (gid, _ ) ->
-                x.Clients.Group(groupNameForUser player).GoToGame(gid) |> ignore
-                x.Clients.Group(groupNameForUser senderUid).GoToGame(gid) |> ignore
-            | None -> ()
+            return ()
         }
 
     member this.SendMessage(message:string, blha:string):Task<string> =
@@ -199,16 +192,6 @@ type GameHub () =
         //Task.CompletedTask
 
     
-    // member this.SendToClient (message: string) =
-    //     let connectionId = this.Context.ConnectionId
-    //     System.Console.WriteLine(sprintf "%s -> %s" connectionId message)
-    //    // System.Threading.Thread.Sleep(1000)
-
-    //     let tt = this.Clients.Clients(connectionId).SendCoreAsync("call", [|message|])
-    //     // this.Clients.Clients(connectionId).SendAsync("blah") |> ignore      // .SendToClient("Not yet...") |> ignore
-
-    //     Task.CompletedTask
-
 let inline encode x = (Json.serialize >> Json.format) x
 let inline decode x = (Json.parse >> Json.deserialize) x
 

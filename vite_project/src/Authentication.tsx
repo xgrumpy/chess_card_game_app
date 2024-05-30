@@ -11,6 +11,7 @@ import { useEffect } from 'react';
 
 const { Option } = Select
 
+let autoLoginFlag = false;
 // @ts-ignore 
 export function SignupForm({ state, dispatch }: VecBoardProps) {
   const signupMutation = useMutation({
@@ -194,7 +195,6 @@ export function Signin(props: VecBoardProps) {
         await connectionR.invoke("Login", session)
         console.log('SignalR authenticated')
         dispatch({ type: 'register_user', uid: payload.uid, session })
-
         if (obj.game_state == undefined) {
           navigate("/lobby")
         } else {
@@ -242,6 +242,7 @@ export function Signin(props: VecBoardProps) {
       remember?: string
     }
     const autoSignIn = async (payload: FieldType) => {
+      autoLoginFlag = true;
       const response = await fetch(`${httpScheme}://${host}/signin`, {
         method: 'POST',
         body: JSON.stringify(payload)
@@ -276,7 +277,7 @@ export function Signin(props: VecBoardProps) {
       }
       return obj
     }
-    if (data !== undefined) {
+    if (data !== undefined && autoLoginFlag == false) {
       const payload = JSON.parse(data);
       autoSignIn(payload);
     }

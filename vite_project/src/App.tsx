@@ -76,6 +76,9 @@ const sqw = w / 8
 const sqh = h / 8
 const pieceScaleFactor = 0.8
 
+let timerId: any
+let btime = 9999
+let wtime = 9999
 
 enum CheckMateState {
   NotInCheckmate = 'Not in checkmate',
@@ -809,11 +812,61 @@ let unableToMakeMoves = (state: State) => {
     return notMyTurn || state.card == "" // when responding only turn matters
 }
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 function MainPage({ state, dispatch }: VecBoardProps) {
   const navigate = useNavigate()
-  let myUid = state.userInfo?.uid
-  const [btime, setBTime] = useState(9999);
-  const [wtime, setWTime] = useState(9999);
+  // useEffect(() => {
+  //   // const fetchData = async () => {
+  //   //   if (connectionR && state.login) {
+  //   //     if ((state.turn == "white" && state.login.user_is_white == false) || (state.turn == "black" && state.login.user_is_white == true)) {
+  //   //       if (connectionR && state.login) {
+  //   //         connectionR.invoke("UpdatePairing", state.login.opponent, btime, wtime)
+  //   //       }
+  //   //     } else {
+  //   //       await connectionR.invoke("SendPairing").then(result => {
+  //   //         try {
+  //   //           let json = JSON.parse(result);
+  //   //           console.log(json.game.pairing.btime)
+  //   //           btime = json.game.pairing.btime
+  //   //           wtime = json.game.pairing.wtime
+  //   //         } catch (err) {
+  //   //           console.error("Failed to parse JSON: ", err);
+  //   //         }
+  //   //       }).catch(err => {
+  //   //         console.error("Error invoking SendPairing: ", err.toString());
+  //   //       });
+  //   //     }
+  //   //   }
+  //   // }
+  //   // fetchData();
+  //   clearInterval(timerId)
+  //   const onTimeout = () => {
+  //     if (connectionR && state.login) {
+  //       if (state.turn == "black") {
+  //         if (btime > 0)
+  //           btime = btime - 1
+  //         if (btime == 0) {
+  //           clearInterval(timerId)
+  //           if (state.login.user_is_white == false)
+  //             connectionR?.invoke('ResignCurrentGame')
+  //         }
+  //       } else {
+  //         if (wtime > 0)
+  //           wtime = wtime - 1
+  //         if (wtime == 0) {
+  //           clearInterval(timerId)
+  //           if (state.login.user_is_white == true)
+  //             connectionR?.invoke('ResignCurrentGame')
+  //         }
+  //       }
+  //     }
+  //   }
+  //   if (btime !== 9999 && wtime !== 9999)
+  //     timerId = setInterval(onTimeout, 1000);
+  // }, [state.turn])
+
+
   // this effect will be mounted unmounted twice in dev by design
   useEffect(() => {
     console.log('Mounting game page')
@@ -821,43 +874,18 @@ function MainPage({ state, dispatch }: VecBoardProps) {
       navigate("/")
       return
     }
-
     var cancellation = { valid: true }
     if (state.login) {
+      btime = state.login.btime
+      wtime = state.login.wtime
       subscribe(dispatch, session, state.login.uid, cancellation)
     }
 
     return () => {
-      // Anything in here is fired on component unmount.
       cancellation.valid = false
       console.log('Unmounting game page')
     }
-
   }, [])
-  if (connectionR) {
-    connectionR.invoke("SendPairing").then(result => {
-      try {
-        let json = JSON.parse(result);
-        setBTime(json.game.pairing.btime);
-        setWTime(json.game.pairing.wtime);
-      } catch (err) {
-        console.error("Failed to parse JSON: ", err);
-      }
-    }).catch(err => {
-      console.error("Error invoking SendPairing: ", err.toString());
-    });
-  }
-  
-  useEffect(() => {
-    const onTimeout = () => {
-      if(connectionR)
-        connectionR?.invoke("UpdatePairing", myUid, btime-1, wtime)
-    }
-    const intervalId = setInterval(onTimeout, 1000);
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [state.turn])
 
   if (!state.login)
     return (<><Typography.Text>No Game</Typography.Text></>)
@@ -924,21 +952,27 @@ function MainPage({ state, dispatch }: VecBoardProps) {
         // let str = await data.text()
         console.log('swap: ', data)
       }
-
       if (state.card.length > 0)
         run().catch(console.error)
-
     }
-
   }, [state.swapReqCount])
-
+  function formatNumberToTwoDigits(num: number): string {
+    return num.toString().padStart(2, '0');
+  }
   const style: React.CSSProperties = { margin: 'auto', display: 'block' }
-
+  let dWTime = "99:99"
+  let dBTime = "99:99"
+  if (wtime !== 9999) {
+    dWTime = Math.floor(wtime / 60) + ":" + formatNumberToTwoDigits(wtime % 60);
+  }
+  if (btime !== 9999) {
+    dBTime = Math.floor(btime / 60) + ":" + formatNumberToTwoDigits(btime % 60);
+  }
   const isWhite = state.login.user_is_white
   const login = state.login
   const data = [
-    ['WHITE: ', isWhite ? login.uid : login.opponent, wtime],
-    ['BLACK: ', isWhite ? login.opponent : login.uid, btime]
+    ['WHITE: ', isWhite ? login.uid : login.opponent],
+    ['BLACK: ', isWhite ? login.opponent : login.uid]
   ]
 
   return (
@@ -970,9 +1004,9 @@ function MainPage({ state, dispatch }: VecBoardProps) {
                   {item[0]}
                 </Typography.Text>
                 <Typography.Text strong={login.uid == item[1]}>{item[1]}</Typography.Text>
-                <Typography.Text >
+                {/* <Typography.Text >
                   {item[2]}
-                </Typography.Text>
+                </Typography.Text> */}
               </List.Item>
             )}
           />

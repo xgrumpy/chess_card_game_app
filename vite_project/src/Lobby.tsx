@@ -292,6 +292,7 @@ export function Lobby({ toggleTheme = () => {} , state, dispatch }: ArenaProps) 
       if (!response.ok)
         throw new Error('Network response was not ok')
       let json = await response.json()
+      // console.log("222222222222222")
       if (json != null) {
         let isWhite = json.user_is_white as boolean
         let opponent = isWhite ? json.game.pairing.black : json.game.pairing.white
@@ -376,8 +377,8 @@ export function Lobby({ toggleTheme = () => {} , state, dispatch }: ArenaProps) 
               />
             </Table>
             <br />
-            <Button onClick={() => { connectionR?.invoke('ProposeGame', '5minute') }}> 5-minute </Button> &nbsp;&nbsp;
-            <Button onClick={() => { connectionR?.invoke('ProposeGame', 'unlimited') }}> unlimited </Button>
+            {/* <Button onClick={() => { connectionR?.invoke('ProposeGame', '5minute') }}> 5-minute </Button> &nbsp;&nbsp; //unlimited*/}
+            <Button onClick={() => { connectionR?.invoke('ProposeGame', 'unlimited') }}> Propose  </Button>
           </TabPane>
           <TabPane tab="Inbox" key="inboxs">
             <MessageBoard />
