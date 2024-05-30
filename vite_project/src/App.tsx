@@ -76,9 +76,9 @@ const sqw = w / 8
 const sqh = h / 8
 const pieceScaleFactor = 0.8
 
-let timerId: any
-let btime = 9999
-let wtime = 9999
+// let timerId: any
+// let btime = 9999
+// let wtime = 9999
 
 enum CheckMateState {
   NotInCheckmate = 'Not in checkmate',
@@ -812,7 +812,7 @@ let unableToMakeMoves = (state: State) => {
     return notMyTurn || state.card == "" // when responding only turn matters
 }
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+// const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 function MainPage({ state, dispatch }: VecBoardProps) {
   const navigate = useNavigate()
@@ -876,8 +876,8 @@ function MainPage({ state, dispatch }: VecBoardProps) {
     }
     var cancellation = { valid: true }
     if (state.login) {
-      btime = state.login.btime
-      wtime = state.login.wtime
+      // btime = state.login.btime
+      // wtime = state.login.wtime
       subscribe(dispatch, session, state.login.uid, cancellation)
     }
 
@@ -956,18 +956,18 @@ function MainPage({ state, dispatch }: VecBoardProps) {
         run().catch(console.error)
     }
   }, [state.swapReqCount])
-  function formatNumberToTwoDigits(num: number): string {
-    return num.toString().padStart(2, '0');
-  }
+  // function formatNumberToTwoDigits(num: number): string {
+  //   return num.toString().padStart(2, '0');
+  // }
   const style: React.CSSProperties = { margin: 'auto', display: 'block' }
-  let dWTime = "99:99"
-  let dBTime = "99:99"
-  if (wtime !== 9999) {
-    dWTime = Math.floor(wtime / 60) + ":" + formatNumberToTwoDigits(wtime % 60);
-  }
-  if (btime !== 9999) {
-    dBTime = Math.floor(btime / 60) + ":" + formatNumberToTwoDigits(btime % 60);
-  }
+  // let dWTime = "99:99"
+  // let dBTime = "99:99"
+  // if (wtime !== 9999) {
+  //   dWTime = Math.floor(wtime / 60) + ":" + formatNumberToTwoDigits(wtime % 60);
+  // }
+  // if (btime !== 9999) {
+  //   dBTime = Math.floor(btime / 60) + ":" + formatNumberToTwoDigits(btime % 60);
+  // }
   const isWhite = state.login.user_is_white
   const login = state.login
   const data = [
