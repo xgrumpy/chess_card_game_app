@@ -345,7 +345,6 @@ export function Lobby({ toggleTheme = () => {} , state, dispatch }: ArenaProps) 
     }else{
       connectionR?.invoke("AcceptGameProposal", uid, 9999,9999)
     }
-    
   }
 
   function callback(key: string): void {

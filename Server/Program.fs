@@ -480,7 +480,7 @@ let sendEmail (body:string) (logger:ILogger) =
         let username = "Jamie.light22@gmail.com" // Your Gmail email address
         let password = "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" // Your Gmail password or app password
         let fromAddress  = "Jamie.light22@gmail.com" // Sender's email address
-        let toAddress= "irontiger121@gmail.com";
+        let toAddress= "Jamielig@buffalo.edu";
         let content = "You have been contacted from " + r.Uid + " \n " + r.Message
         // match getEmailById r.Uid with
         //     | Some email -> 

@@ -865,7 +865,7 @@ module Lobby =
                 ] |> cnl.Reply
             | RemoveExpired -> 
                 // this will be called every some interval...
-                let (threshold, tm) = (600 (* seconds *), now() (* seconds *))
+                let (threshold, tm) = (3600 (* seconds *), now() (* seconds *))
                 for KeyValue(user,datum) in lobby do
                     if tm - datum.Timestamp >= threshold then
                         deregisterUser user
