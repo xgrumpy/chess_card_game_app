@@ -397,6 +397,26 @@ let updateUser (body:string) (logger:ILogger) =
         log_activity("updateUser", "", "error", e) |> ignore
         None
 
+type removeUserMsg = 
+    { current_uid:string }
+let removeUser (body:string) (logger:ILogger) =
+    let body' = Decode.Auto.fromString<removeUserMsg>(body,SnakeCase)
+    match body' with
+    | Ok r ->
+        let success = removeUser(r.current_uid)
+        Console.WriteLine(success);
+        // return JSON object
+        let out = {| Result = if success > 0 then "success" else "fail" |} 
+        Encode.Auto.toString(out, SnakeCase) |> Some
+    | Error e ->
+        // Log a detailed error message
+        logger.LogCritical($"Error decoding JSON: {e}")
+        // Log additional information such as the problematic JSON string
+        logger.LogDebug($"JSON string causing the error: {body}")
+        // Continue with the existing error handling logic
+        log_activity("removeUser", "", "error", e) |> ignore
+        None
+
 let signInUser (body:string) (logger:ILogger) =
     let body' = Decode.Auto.fromString< {| Uid:string; Password:string |}>(body,SnakeCase)
     match body' with
@@ -512,6 +532,7 @@ let webApp =
             choose [
                 route "/signup" >=> (handlerWrapper signUpUser "new")
                 route "/updateUser" >=> (handlerWrapper updateUser "new")
+                route "/removeUser" >=> (handlerWrapper removeUser "new")
                 route "/signin" >=> (handlerWrapper signInUser "new")
                 route "/inbox" >=> (handlerWrapper inbox "new")
                 route "/getInbox" >=> (handlerWrapper getInbox "new")

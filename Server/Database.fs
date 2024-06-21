@@ -165,6 +165,19 @@ let updateUser (uid:string,  birthday:string, gender:string, email:string, curre
 
     try cmd.ExecuteNonQuery() with _ -> 0
 
+let removeUser (currentUid:string) = 
+    use conn = createAndOpenConnection()
+    let sql = 
+        """
+        DELETE From users 
+        WHERE uid=$currentUid
+        """
+    let cmd = createCommand conn sql
+
+    cmd.Parameters.AddWithValue("$currentUid", currentUid) |> ignore
+
+    try cmd.ExecuteNonQuery() with _ -> 0
+
 let updateRating (uid:string, newRating:int) = 
     use conn = createAndOpenConnection()
     let sql = 
